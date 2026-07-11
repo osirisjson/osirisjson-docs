@@ -1,0 +1,64 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.2 Chrome/134.0.6998.178 Electron/35.1.2 Safari/537.36" version="26.2.2">
+  <diagram id="spine-leaf-topology" name="MXP Datacenter Spine-Leaf Topology">
+    <mxGraphModel dx="1424" dy="874" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;font style=&quot;font-size:18px&quot;&gt;&lt;b&gt;OSIRIS JSON MXP Datacenter Spine-Leaf Fabric&lt;/b&gt;&lt;/font&gt;&lt;br&gt;Arista spine-leaf with Dell compute server  Site: mxp-dc-01  Room: DC-A" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="360" y="15" width="440" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="fabric-group" value="Datacenter Fabric &amp;mdash; Spine-Leaf (BGP, ASN 65000-65010)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#E6E6E6;verticalAlign=top;fontStyle=1;fontSize=13;arcSize=1;container=1;collapsible=0;spacingTop=8;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="40" y="80" width="1080" height="720" as="geometry" />
+        </mxCell>
+        <mxCell id="spine-layer" value="Spine Layer (Core / Routing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#FFB74D;verticalAlign=top;fontStyle=1;fontSize=12;arcSize=3;container=1;collapsible=0;spacingTop=6;" parent="fabric-group" vertex="1">
+          <mxGeometry x="43.2" y="54.55" width="993.6" height="225.45" as="geometry" />
+        </mxCell>
+        <mxCell id="spine-01" value="&lt;b&gt;spine-01&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;network.switch&lt;br&gt;Arista DCS-7050SX3-48YC12&lt;br&gt;EOS 4.29.2F&lt;br&gt;48×10G + 12×100G&lt;br&gt;10.30.1.10 &amp;middot; R01 U38-U39&lt;/font&gt;" style="shape=mxgraph.cisco.switches.workgroup_switch;fillColor=#FFB74D;fontColor=#333333;strokeColor=#E65100;rounded=1;html=1;fontSize=11;verticalAlign=top;spacingTop=5;spacingBottom=5;labelPosition=center;verticalLabelPosition=bottom;align=center;spacingLeft=0;aspect=fixed;" parent="spine-layer" vertex="1">
+          <mxGeometry x="431.35200000000003" y="55.45250000000001" width="119.99999999999999" height="50.00999999999999" as="geometry" />
+        </mxCell>
+        <mxCell id="pod-01" value="POD-01 &amp;mdash; 10.0.10.0/24 VLAN 10 (GW 10.0.10.1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#42A5F5;verticalAlign=top;fontStyle=1;fontSize=12;arcSize=2;container=1;collapsible=0;spacingTop=6;" parent="fabric-group" vertex="1">
+          <mxGeometry x="43.2" y="305.45" width="993.6" height="374.55" as="geometry" />
+        </mxCell>
+        <mxCell id="leaf-layer" value="Leaf Layer (Access / Switching)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#AB47BC;verticalAlign=top;fontStyle=1;fontSize=11;arcSize=5;container=1;collapsible=0;spacingTop=6;" parent="pod-01" vertex="1">
+          <mxGeometry x="47.31" y="44.06" width="898.97" height="205.94" as="geometry" />
+        </mxCell>
+        <mxCell id="leaf-01" value="&lt;b&gt;leaf-01&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;network.switch&lt;br&gt;Arista DCS-7050SX3-48YC12&lt;br&gt;EOS 4.29.2F &amp;middot; 10.30.1.40&lt;br&gt;R40 U40-U41&lt;/font&gt;" style="shape=mxgraph.cisco.switches.workgroup_switch;fillColor=#CE93D8;fontColor=#333333;strokeColor=#7B1FA2;rounded=1;html=1;fontSize=11;verticalAlign=top;aspect=fixed;labelPosition=left;verticalLabelPosition=bottom;align=right;" parent="leaf-layer" vertex="1">
+          <mxGeometry x="169.49421052631578" y="72.75" width="119.99980930587337" height="45.26992806064073" as="geometry" />
+        </mxCell>
+        <mxCell id="leaf-02" value="&lt;b&gt;leaf-02&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;network.switch&lt;br&gt;Arista DCS-7050SX3-48YC12&lt;br&gt;EOS 4.29.2F &amp;middot; 10.10.1.41&lt;br&gt;R41 U40-U41&lt;/font&gt;" style="shape=mxgraph.cisco.switches.workgroup_switch;fillColor=#CE93D8;fontColor=#333333;strokeColor=#7B1FA2;rounded=1;html=1;fontSize=11;verticalAlign=top;aspect=fixed;labelPosition=right;verticalLabelPosition=bottom;align=left;" parent="leaf-layer" vertex="1">
+          <mxGeometry x="591.4276315789473" y="72.74567267387532" width="119.99980930587337" height="45.26992806064073" as="geometry" />
+        </mxCell>
+        <mxCell id="srv-10" value="&lt;b&gt;compute-srv-10&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;compute.server&lt;br&gt;Dell PowerEdge R770&lt;br&gt;ens1f0: 10.0.10.50 (10G)&lt;br&gt;ens1f1: 10.0.10.51 (10G)&lt;br&gt;R40 U10-U12&lt;/font&gt;" style="shape=mxgraph.cisco.servers.standard_server;fillColor=#90CAF9;fontColor=#333333;strokeColor=#1565C0;rounded=1;whiteSpace=wrap;html=1;fontSize=11;verticalAlign=middle;spacingTop=5;spacingBottom=5;arcSize=9;" parent="pod-01" vertex="1">
+          <mxGeometry x="400" y="274.55" width="196" height="87.11" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-l1-srv" value="&lt;font style=&quot;font-size:9px&quot;&gt;10G Copper (Cat6a)&lt;br&gt;Eth1 → ens1f0&lt;br&gt;VLAN 10 &amp;middot; 5m&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;fontColor=#333333;labelBackgroundColor=#FFFFFF;startArrow=classic;endArrow=classic;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.435;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" parent="pod-01" source="leaf-01" target="srv-10" edge="1">
+          <mxGeometry x="0.087" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="269" y="318" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-l2-srv" value="&lt;font style=&quot;font-size:9px&quot;&gt;10G Copper (Cat6a)&lt;br&gt;Eth1 → ens1f1&lt;br&gt;VLAN 10 &amp;middot; 7m&lt;br&gt;&lt;i&gt;active-backup bond&lt;/i&gt;&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;fontColor=#333333;labelBackgroundColor=#FFFFFF;startArrow=classic;endArrow=classic;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.434;exitY=1.02;exitDx=0;exitDy=0;exitPerimeter=0;" parent="pod-01" source="leaf-02" target="srv-10" edge="1">
+          <mxGeometry x="0.2127" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-s1-l1" value="&lt;font style=&quot;font-size:9px&quot;&gt;100G Fiber (MPO OM4)&lt;br&gt;Eth49/1 ↔ Eth49/1&lt;br&gt;MTU 9214 &amp;middot; 15m&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#E65100;strokeWidth=3;fontColor=#333333;labelBackgroundColor=#FFFFFF;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" parent="fabric-group" source="spine-01" target="leaf-01" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="135" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-s1-l2" value="&lt;font style=&quot;font-size:9px&quot;&gt;100G Fiber (MPO OM4)&lt;br&gt;Eth50/1 ↔ Eth49/1&lt;br&gt;MTU 9214 &amp;middot; 20m&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#E65100;strokeWidth=3;fontColor=#333333;labelBackgroundColor=#FFFFFF;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.98;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" parent="fabric-group" source="spine-01" target="leaf-02" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="742" y="135" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

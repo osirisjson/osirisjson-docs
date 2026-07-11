@@ -1,0 +1,65 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.2 Chrome/134.0.6998.178 Electron/35.1.2 Safari/537.36" version="26.2.2">
+  <diagram id="hybrid-topology" name="Hybrid Cloud Infrastructure">
+    <mxGraphModel dx="1424" dy="874" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;font style=&quot;font-size:18px&quot;&gt;&lt;b&gt;OSIRIS JSON Hybrid Hyperscalers Infrastructure&lt;/b&gt;&lt;/font&gt;&lt;br&gt;AWS web tier connected via site-to-site VPN to on-premise application and database servers in MXP datacenter" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="270" y="15" width="620" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="aws-group" value="AWS Hyperscaler&lt;br&gt;US-East-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;verticalAlign=top;fontStyle=1;fontSize=14;arcSize=2;container=1;collapsible=0;spacingTop=8;" parent="1" vertex="1">
+          <mxGeometry x="80" y="80" width="400" height="720" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-web-vpn" value="&lt;font style=&quot;font-size:9px&quot;&gt;IPSec encrypted&lt;br&gt;Bidirectional&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8C4FFF;strokeWidth=2;fontColor=#333333;labelBackgroundColor=#FFFFFF;startArrow=classic;endArrow=classic;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="aws-group" source="GRuJS76LPLDBmltMbMzD-1" target="GRuJS76LPLDBmltMbMzD-2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="GRuJS76LPLDBmltMbMzD-1" value="&lt;font style=&quot;&quot;&gt;&lt;b style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;web-public-prod-01&lt;/b&gt;&lt;br style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;&lt;font style=&quot;text-wrap-mode: wrap; font-size: 10px;&quot;&gt;compute.vm&lt;br&gt;AWS EC2 t3.large&lt;br&gt;10.10.1.50 / 203.0.113.10&lt;br&gt;us-east-1a&lt;br&gt;vpc-hybrid-001&lt;/font&gt;&lt;/font&gt;" style="outlineConnect=0;dashed=0;verticalLabelPosition=middle;verticalAlign=middle;align=right;html=1;shape=mxgraph.aws3.ec2;fillColor=#F58534;gradientColor=none;whiteSpace=wrap;labelPosition=left;spacingRight=20;fontColor=default;" vertex="1" parent="aws-group">
+          <mxGeometry x="159.73684210526315" y="130" width="80.52631578947368" height="75.88" as="geometry" />
+        </mxCell>
+        <mxCell id="GRuJS76LPLDBmltMbMzD-2" value="&lt;font style=&quot;&quot;&gt;&lt;b style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;aws-to-mxp-vpn&lt;/b&gt;&lt;br style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;&lt;font style=&quot;text-wrap-mode: wrap; font-size: 10px;&quot;&gt;network.vpn&lt;br&gt;Site-to-Site IPSec&lt;br&gt;Tunnel 1: UP  Tunnel 2: UP&lt;br&gt;BGP ASN 65000&lt;br&gt;CGW: 203.0.113.50&lt;/font&gt;&lt;/font&gt;" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=default;fillColor=#8C4FFF;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.site_to_site_vpn;whiteSpace=wrap;" vertex="1" parent="aws-group">
+          <mxGeometry x="158.1578947368421" y="405" width="78" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="mxp-group" value="On-Premise MXP Datacenter&lt;br&gt;Milan, Italy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=14;arcSize=2;container=1;collapsible=0;spacingTop=8;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="600" y="80" width="480" height="720" as="geometry" />
+        </mxCell>
+        <mxCell id="rack-r42" value="Rack R42&lt;br&gt;DC-A (8kW, rear-door cooling)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#66BB6A;verticalAlign=top;fontStyle=1;fontSize=11;arcSize=3;container=1;collapsible=0;spacingTop=6;" parent="mxp-group" vertex="1">
+          <mxGeometry x="40" y="67.5" width="400" height="382.5" as="geometry" />
+        </mxCell>
+        <mxCell id="mxp-app" value="&lt;b&gt;app-srv-01&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;compute.server&lt;br&gt;Dell PowerEdge R770&lt;br&gt;2× Xeon 8470 (104c/208t)&lt;br&gt;512GB DDR5 &amp;middot; 4× 960GB NVMe&lt;br&gt;RHEL 9.2 &amp;middot; 10.30.10.50&lt;br&gt;U10-U12&lt;/font&gt;" style="shape=mxgraph.cisco.servers.standard_server;fillColor=#A5D6A7;fontColor=#333333;strokeColor=#2E7D32;rounded=1;whiteSpace=wrap;html=1;fontSize=11;verticalAlign=middle;spacingTop=5;spacingBottom=5;arcSize=6;" parent="rack-r42" vertex="1">
+          <mxGeometry x="80" y="62.5" width="240" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="mxp-db" value="&lt;b&gt;db-srv-01&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;compute.server&lt;br&gt;Dell PowerEdge R770&lt;br&gt;2× Xeon 8470 (104c/208t)&lt;br&gt;1TB DDR5 &amp;middot; 8× 3.8TB NVMe RAID10&lt;br&gt;RHEL 9.2 + Oracle 19c&lt;br&gt;10.30.10.51 &amp;middot; U13-U15&lt;/font&gt;" style="shape=mxgraph.cisco.servers.standard_server;fillColor=#90CAF9;fontColor=#333333;strokeColor=#1565C0;rounded=1;whiteSpace=wrap;html=1;fontSize=11;verticalAlign=middle;spacingTop=5;spacingBottom=5;arcSize=6;" parent="rack-r42" vertex="1">
+          <mxGeometry x="80" y="250" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-app-db" value="&lt;font style=&quot;font-size:9px&quot;&gt;Oracle :1521&lt;br&gt;Backend network&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;fontColor=#333333;labelBackgroundColor=#FFFFFF;endArrow=block;endFill=1;" parent="rack-r42" source="mxp-app" target="mxp-db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mxp-storage" value="&lt;b&gt;shared-storage-01&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;storage.array&lt;br&gt;Dell PowerStore ME5024&lt;br&gt;24× 3.8TB SSD (SAS)&lt;br&gt;86.4TB usable (42.1TB used)&lt;br&gt;Dual controller &amp;middot; iSCSI + FC&lt;br&gt;R43 U20-U24&lt;/font&gt;" style="shape=mxgraph.cisco.servers.database_appliance;fillColor=#e1d5e7;strokeColor=#9673a6;rounded=1;whiteSpace=wrap;html=1;fontSize=11;verticalAlign=middle;spacingTop=5;spacingBottom=5;arcSize=6;" parent="mxp-group" vertex="1">
+          <mxGeometry x="120" y="528.75" width="240" height="146.25" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-db-storage" value="&lt;font style=&quot;font-size:9px&quot;&gt;iSCSI multipath&lt;br&gt;4 LUNs&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9999FF;strokeWidth=2;fontColor=#333333;labelBackgroundColor=#FFFFFF;startArrow=classic;endArrow=classic;" parent="mxp-group" source="mxp-db" target="mxp-storage" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-app-storage" value="&lt;font style=&quot;font-size:9px&quot;&gt;iSCSI multipath&lt;br&gt;2 LUNs&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9999FF;strokeWidth=2;fontColor=#333333;labelBackgroundColor=#FFFFFF;startArrow=classic;endArrow=classic;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="mxp-group" target="mxp-storage" edge="1">
+          <mxGeometry x="0.3947" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="180" />
+              <mxPoint x="400" y="602" />
+            </Array>
+            <mxPoint x="360" y="180" as="sourcePoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-vpn-app" value="&lt;font style=&quot;font-size:10px&quot;&gt;&lt;b&gt;Site-to-Site VPN&lt;/b&gt;&lt;br&gt;10.30.10.0/24&lt;br&gt;IPSec encrypted&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8C4FFF;strokeWidth=3;fontColor=#333333;labelBackgroundColor=#FFFFFF;startArrow=classic;endArrow=classic;dashed=1;dashPattern=12 4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="GRuJS76LPLDBmltMbMzD-2" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="260" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="540" y="524" />
+              <mxPoint x="540" y="260" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

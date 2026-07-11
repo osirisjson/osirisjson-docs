@@ -1,0 +1,234 @@
+{
+	"$schema": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+	"version": "1.0.0",
+	"metadata": {
+		"timestamp": "2026-01-11T18:00:00Z",
+		"generator": {
+			"name": "manual",
+			"version": "1.0.0"
+		},
+		"scope": {
+			"name": "IT/OT cross network topology",
+			"description": "Hybrid connectivity between IT and OT networks with firewall segmentation and historian integration.",
+			"providers": ["aws", "custom"],
+			"sites": ["mxp"],
+			"regions": ["us-east-1"],
+			"environments": ["production"]
+		}
+	},
+	"topology": {
+		"resources": [
+			{
+				"id": "aws::vpc-prod-01",
+				"type": "network.vpc",
+				"name": "Production VPC",
+				"provider": {
+					"name": "aws",
+					"native_id": "vpc-0abc123def4567890",
+					"region": "us-east-1",
+					"account": "123456789012"
+				},
+				"properties": {
+					"cidr": "10.10.0.0/16"
+				},
+				"tags": {
+					"environment": "production",
+					"domain": "it"
+				}
+			},
+			{
+				"id": "aws::subnet-web-01",
+				"type": "network.subnet",
+				"name": "Web subnet",
+				"provider": {
+					"name": "aws",
+					"native_id": "subnet-0web123",
+					"region": "us-east-1",
+					"account": "123456789012"
+				},
+				"properties": {
+					"cidr": "10.10.1.0/24",
+					"availability_zone": "us-east-1a"
+				},
+				"tags": {
+					"environment": "production",
+					"domain": "it"
+				}
+			},
+			{
+				"id": "aws::i-web-01",
+				"type": "compute.vm",
+				"name": "web-server-01",
+				"provider": {
+					"name": "aws",
+					"native_id": "i-0web123",
+					"region": "us-east-1",
+					"account": "123456789012"
+				},
+				"properties": {
+					"instance_type": "t3.large",
+					"private_ip": "10.10.1.50",
+					"public_ip": "203.0.113.10"
+				},
+				"tags": {
+					"environment": "production",
+					"domain": "it"
+				}
+			},
+			{
+				"id": "mxp::fw-it-ot-01",
+				"type": "network.firewall",
+				"name": "FW-IT-OT-01",
+				"provider": {
+					"name": "custom",
+					"namespace": "osiris.com.paloalto",
+					"native_id": "FW-IT-OT-01",
+					"site": "mxp"
+				},
+				"properties": {
+					"vendor": "Palo Alto Networks",
+					"model": "PA-3220",
+					"mgmt_ip": "10.20.0.1",
+					"interfaces": [
+						{
+							"name": "ethernet1/1",
+							"zone": "it",
+							"ip": "10.20.0.2/30"
+						},
+						{
+							"name": "ethernet1/2",
+							"zone": "ot",
+							"ip": "10.30.0.2/30"
+						}
+					]
+				},
+				"tags": {
+					"environment": "production",
+					"domain": "it_ot_boundary"
+				}
+			},
+			{
+				"id": "mxp::plc-line-01",
+				"type": "ot.plc",
+				"name": "PLC-LINE-01",
+				"provider": {
+					"name": "custom",
+					"namespace": "osiris.com.rockwell",
+					"native_id": "PLC-0001",
+					"site": "mxp"
+				},
+				"properties": {
+					"vendor": "Rockwell Automation",
+					"model": "CompactLogix 5380",
+					"ip_address": "10.30.10.20"
+				},
+				"tags": {
+					"environment": "production",
+					"domain": "ot"
+				}
+			},
+			{
+				"id": "mxp::historian-svc-01",
+				"type": "application.service",
+				"name": "historian-svc-01",
+				"description": "Historian service aggregating OT telemetry for IT analytics",
+				"provider": {
+					"name": "custom",
+					"namespace": "osiris.com.osisoft",
+					"native_id": "PI-HIST-01",
+					"site": "mxp"
+				},
+				"properties": {
+					"vendor": "OSIsoft",
+					"product": "PI System",
+					"ip_address": "10.30.20.50",
+					"protocols": ["opc_ua", "https"]
+				},
+				"tags": {
+					"environment": "production",
+					"domain": "ot"
+				}
+			}
+		],
+		"connections": [
+			{
+				"id": "conn-vpc-to-subnet-web",
+				"type": "contains",
+				"source": "aws::vpc-prod-01",
+				"target": "aws::subnet-web-01",
+				"direction": "forward"
+			},
+			{
+				"id": "conn-subnet-to-ec2-web",
+				"type": "contains",
+				"source": "aws::subnet-web-01",
+				"target": "aws::i-web-01",
+				"direction": "forward"
+			},
+			{
+				"id": "conn-it-to-fw",
+				"type": "network",
+				"source": "aws::i-web-01",
+				"target": "mxp::fw-it-ot-01",
+				"direction": "bidirectional",
+				"properties": {
+					"zone": "it",
+					"interface": "ethernet1/1"
+				}
+			},
+			{
+				"id": "conn-ot-to-fw",
+				"type": "network",
+				"source": "mxp::plc-line-01",
+				"target": "mxp::fw-it-ot-01",
+				"direction": "bidirectional",
+				"properties": {
+					"zone": "ot",
+					"interface": "ethernet1/2"
+				}
+			},
+			{
+				"id": "conn-plc-to-historian",
+				"type": "dataflow.control",
+				"source": "mxp::plc-line-01",
+				"target": "mxp::historian-svc-01",
+				"direction": "forward",
+				"properties": {
+					"protocol": "opc_ua",
+					"port": 4840
+				}
+			},
+			{
+				"id": "conn-historian-to-it",
+				"type": "dataflow.telemetry",
+				"source": "mxp::historian-svc-01",
+				"target": "aws::i-web-01",
+				"direction": "forward",
+				"properties": {
+					"protocol": "https",
+					"port": 443
+				}
+			}
+		],
+		"groups": [
+			{
+				"id": "grp-it-domain",
+				"type": "logical.network.zone",
+				"name": "IT Domain",
+				"members": ["aws::vpc-prod-01", "aws::subnet-web-01", "aws::i-web-01"]
+			},
+			{
+				"id": "grp-ot-domain",
+				"type": "logical.network.zone",
+				"name": "OT Domain",
+				"members": ["mxp::plc-line-01", "mxp::historian-svc-01"]
+			},
+			{
+				"id": "grp-it-ot-boundary",
+				"type": "logical.security.zone",
+				"name": "IT/OT Boundary",
+				"members": ["mxp::fw-it-ot-01"]
+			}
+		]
+	}
+}

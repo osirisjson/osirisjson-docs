@@ -1,0 +1,50 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.2 Chrome/134.0.6998.178 Electron/35.1.2 Safari/537.36" version="26.2.2">
+  <diagram id="hyperscaler-topology" name="Multi-Hyperscaler Environment">
+    <mxGraphModel dx="1424" dy="874" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="azure-group" value="Azure&lt;br&gt;East US" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;fontStyle=1;fontSize=14;arcSize=2;container=1;collapsible=0;spacingTop=8;" parent="1" vertex="1">
+          <mxGeometry x="80" y="80" width="480" height="720" as="geometry" />
+        </mxCell>
+        <mxCell id="O_vBQ9_nrBV-cgpvPIll-1" value="&lt;b style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;web-frontend-prod&lt;/b&gt;&lt;br style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;&lt;font style=&quot;text-wrap-mode: wrap; font-size: 10px;&quot;&gt;compute.container&lt;br&gt;Azure App Service&lt;br&gt;Node 18 LTS (Linux)&lt;br&gt;web-frontend-prod.azurewebsites.net&lt;/font&gt;" style="image;aspect=fixed;html=1;points=[];align=right;fontSize=12;image=img/lib/azure2/app_services/App_Services.svg;labelBackgroundColor=none;fontColor=default;labelPosition=left;verticalLabelPosition=middle;verticalAlign=middle;spacingRight=20;" vertex="1" parent="azure-group">
+          <mxGeometry x="215" y="140.0032258064516" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="O_vBQ9_nrBV-cgpvPIll-2" value="&lt;b style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;prod-sql-database&lt;/b&gt;&lt;br style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;&lt;font style=&quot;text-wrap-mode: wrap; font-size: 10px;&quot;&gt;application.database&lt;br&gt;Azure SQL Database&lt;br&gt;Standard S2&lt;br&gt;prod-sql-srv.database.windows.net&lt;/font&gt;" style="image;aspect=fixed;html=1;points=[];align=right;fontSize=12;image=img/lib/azure2/databases/SQL_Database.svg;fontColor=default;labelBackgroundColor=none;spacingRight=20;labelPosition=left;verticalLabelPosition=middle;verticalAlign=middle;" vertex="1" parent="azure-group">
+          <mxGeometry x="215" y="520.0035483870968" width="50" height="66.67" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-frontend-redis" value="&lt;font style=&quot;font-size:10px&quot;&gt;Redis :6380 SSL&lt;br&gt;session-storage&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E86C1;strokeWidth=2;fontColor=#333333;labelBackgroundColor=#FFFFFF;startArrow=classic;endArrow=classic;exitX=0.544;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.54;entryY=0.048;entryDx=0;entryDy=0;entryPerimeter=0;" parent="azure-group" source="O_vBQ9_nrBV-cgpvPIll-1" target="O_vBQ9_nrBV-cgpvPIll-3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="O_vBQ9_nrBV-cgpvPIll-3" value="&lt;b style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;prod-redis-cache&lt;/b&gt;&lt;br style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;&lt;font style=&quot;text-wrap-mode: wrap; font-size: 10px;&quot;&gt;application.cache&lt;br&gt;Azure Redis Cache&lt;br&gt;Standard C1  Redis 6.0&lt;br&gt;Port 6380 (SSL)&lt;/font&gt;" style="image;sketch=0;aspect=fixed;html=1;points=[];align=right;fontSize=12;image=img/lib/mscae/Cache_Redis_Product.svg;labelBackgroundColor=none;fontColor=default;spacingRight=20;labelPosition=left;verticalLabelPosition=middle;verticalAlign=middle;" vertex="1" parent="azure-group">
+          <mxGeometry x="215" y="340.00032258064516" width="50" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="aws-group" value="AWS&lt;br&gt;US-East-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;verticalAlign=top;fontStyle=1;fontSize=14;arcSize=2;container=1;collapsible=0;spacingTop=8;" parent="1" vertex="1">
+          <mxGeometry x="680" y="80" width="400" height="720" as="geometry" />
+        </mxCell>
+        <mxCell id="O_vBQ9_nrBV-cgpvPIll-5" value="&lt;b style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;api-server-prod-01&lt;/b&gt;&lt;br style=&quot;font-size: 11px; text-wrap-mode: wrap;&quot;&gt;&lt;font style=&quot;text-wrap-mode: wrap; font-size: 10px;&quot;&gt;compute.vm&lt;br&gt;AWS EC2 c5.xlarge&lt;br&gt;10.0.2.78 / 203.0.113.10&lt;br&gt;us-east-1b&lt;/font&gt;" style="outlineConnect=0;dashed=0;verticalLabelPosition=middle;verticalAlign=middle;align=left;html=1;shape=mxgraph.aws3.ec2;fillColor=#F58534;gradientColor=none;aspect=fixed;fontColor=default;labelPosition=right;spacingLeft=20;" vertex="1" parent="aws-group">
+          <mxGeometry x="171.74" y="325.65" width="56.51" height="68.7" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-frontend-api" value="&lt;font style=&quot;font-size:10px&quot;&gt;HTTPS :443&lt;br&gt;OAuth2&lt;br&gt;&lt;i&gt;cross-cloud&lt;/i&gt;&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#E74C3C;strokeWidth=2;fontColor=#333333;labelBackgroundColor=#FFFFFF;exitX=0.985;exitY=0.485;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;dashed=1;dashPattern=8 4;exitPerimeter=0;entryPerimeter=0;" parent="1" source="O_vBQ9_nrBV-cgpvPIll-1" target="O_vBQ9_nrBV-cgpvPIll-5" edge="1">
+          <mxGeometry x="-0.2088" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-api-db" value="&lt;font style=&quot;font-size:10px&quot;&gt;TDS :1433&lt;br&gt;Pool: 20&lt;br&gt;&lt;i&gt;cross-cloud&lt;/i&gt;&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#E74C3C;strokeWidth=2;fontColor=#333333;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.979;entryY=0.625;entryDx=0;entryDy=0;dashed=1;dashPattern=8 4;entryPerimeter=0;exitPerimeter=0;" parent="1" source="O_vBQ9_nrBV-cgpvPIll-5" target="O_vBQ9_nrBV-cgpvPIll-2" edge="1">
+          <mxGeometry x="0.2151" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-api-redis" value="&lt;font style=&quot;font-size:10px&quot;&gt;Redis :6380 SSL&lt;br&gt;response-cache&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E86C1;strokeWidth=2;fontColor=#333333;labelBackgroundColor=#FFFFFF;startArrow=classic;endArrow=classic;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.98;entryY=0.476;entryDx=0;entryDy=0;entryPerimeter=0;exitPerimeter=0;" parent="1" source="O_vBQ9_nrBV-cgpvPIll-5" target="O_vBQ9_nrBV-cgpvPIll-3" edge="1">
+          <mxGeometry x="-0.0872" relative="1" as="geometry">
+            <Array as="points" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="title" value="&lt;font style=&quot;font-size:18px&quot;&gt;&lt;b&gt;OSIRIS JSON Multi-Hyperscaler Web Application&lt;/b&gt;&lt;/font&gt;&lt;br&gt;Three-tier app: Azure frontend + cache, AWS API backend, Azure SQL database" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="355" y="15" width="450" height="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
