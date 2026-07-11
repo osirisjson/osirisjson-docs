@@ -1,0 +1,47 @@
+---
+import logo from '../assets/logo/osiris-logo-color-positive.svg';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<title>Page not found - OSIRIS JSON</title>
+		<meta http-equiv="refresh" content="0; url=/" />
+		<link rel="icon" href="/favicon.svg" />
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
+
+			body {
+				margin: 0;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 1rem;
+				height: 100vh;
+				background: #edeae1;
+				color: #011826;
+				font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+				text-align: center;
+			}
+
+			img {
+				height: 40px;
+			}
+
+			a {
+				color: #2c3e50;
+			}
+		</style>
+		<script>
+			window.location.replace('/');
+		</script>
+	</head>
+	<body>
+		<img src={logo.src} alt="OSIRIS JSON" />
+		<p>Redirecting to <a href="/">the homepage</a>&hellip;</p>
+	</body>
+</html>

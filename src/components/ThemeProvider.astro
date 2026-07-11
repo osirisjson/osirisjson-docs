@@ -1,0 +1,10 @@
+---
+// docs.osirisjson.org is launched initially light-only to align to osirisjson.org
+// no toggle exists anywhere in the UI, so just force the theme instead of running Starlight's stock
+// localStorage/prefers-color-scheme detection (which would otherwise still
+// flip visitors with OS-level dark mode into Starlight's dark tokens).
+---
+
+<script is:inline>
+	document.documentElement.dataset.theme = 'light';
+</script>

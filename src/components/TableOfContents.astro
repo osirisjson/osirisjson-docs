@@ -1,0 +1,70 @@
+---
+import Default from '@astrojs/starlight/components/TableOfContents.astro';
+import githubIconRaw from '../assets/icons/brand/github.svg?raw';
+
+const { editUrl } = Astro.locals.starlightRoute;
+const issueUrl = 'https://github.com/osirisjson/osirisjson-docs/issues/new/choose';
+---
+
+<Default />
+
+<nav class="toc-actions" aria-label="Page actions">
+	{
+		editUrl && (
+			<a href={editUrl} class="sl-flex">
+				<span class="material-symbols-outlined" aria-hidden="true">
+					edit
+				</span>
+				{Astro.locals.t('page.editLink')}
+			</a>
+		)
+	}
+	<a href={issueUrl} target="_blank" rel="noreferrer" class="sl-flex">
+		<span class="brand-icon" aria-hidden="true" set:html={githubIconRaw} />
+		Report issue
+	</a>
+</nav>
+
+<style>
+	@layer starlight.core {
+		.toc-actions {
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+			margin-top: 1.5rem;
+			padding-top: 1.5rem;
+			border-top: 1px solid var(--sl-color-hairline);
+		}
+
+		.toc-actions a {
+			gap: 0.5rem;
+			align-items: center;
+			text-decoration: none;
+			font-size: var(--sl-text-xs);
+			color: var(--sl-color-gray-3);
+		}
+
+		.toc-actions a:hover {
+			color: var(--sl-color-text-accent);
+		}
+
+		.toc-actions .material-symbols-outlined {
+			font-size: 1.2em;
+		}
+
+		.toc-actions .brand-icon {
+			display: inline-flex;
+			width: 1em;
+			height: 1em;
+		}
+
+		.toc-actions .brand-icon :global(svg) {
+			width: 100%;
+			height: 100%;
+		}
+
+		.toc-actions .brand-icon :global(path) {
+			fill: currentColor;
+		}
+	}
+</style>

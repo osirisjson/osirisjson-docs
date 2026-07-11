@@ -1,0 +1,14 @@
+---
+// Overrides Starlight's default Head.astro
+import ogDefault from '../assets/social/og-default.png';
+
+const { head } = Astro.locals.starlightRoute;
+const ogImageUrl = new URL(ogDefault.src, Astro.site).href;
+---
+
+{head.map(({ tag: Tag, attrs, content }) => <Tag {...attrs} set:html={content} />)}
+<meta property="og:image" content={ogImageUrl} />
+<meta property="og:image:width" content={String(ogDefault.width)} />
+<meta property="og:image:height" content={String(ogDefault.height)} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content={ogImageUrl} />

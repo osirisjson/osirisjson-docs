@@ -1,0 +1,130 @@
+---
+// Site-wide footer appended below Starlight's own page footer
+import Pagination from 'virtual:starlight/components/Pagination';
+import MermaidZoom from './MermaidZoom.astro';
+
+const startYear = 2025;
+const currentYear = new Date().getFullYear();
+const copyrightYears = currentYear > startYear ? `${startYear}-${currentYear}` : `${startYear}`;
+
+const pageTitle = Astro.locals.starlightRoute.entry.data.title;
+const issueUrl = `https://github.com/osirisjson/osirisjson-docs/issues/new?labels=documentation&title=${encodeURIComponent(`[Improvement:${pageTitle}]`)}`;
+---
+
+<footer>
+	<Pagination />
+</footer>
+
+<MermaidZoom />
+
+<div class="site-footer">
+	<div class="site-footer-prompts">
+		<p class="prompt">
+			<span class="material-symbols-outlined" aria-hidden="true">help</span>
+			<span>
+				Feedback or questions regarding OSIRIS JSON? <a
+					href="https://github.com/orgs/osirisjson/discussions"
+					target="_blank"
+					rel="noopener noreferrer">Ask on GitHub</a
+				>
+			</span>
+		</p>
+		<p class="prompt">
+			<span class="material-symbols-outlined" aria-hidden="true">bug_report</span>
+			<span>
+				See a bug in this page? <a href={issueUrl} target="_blank" rel="noopener noreferrer"
+					>Open an issue on GitHub</a
+				>
+			</span>
+		</p>
+		<p class="prompt">
+			<span class="material-symbols-outlined" aria-hidden="true">favorite</span>
+			<span>
+				Support OSIRIS: <a href="/community/support/">Support the project</a>
+			</span>
+		</p>
+		<p class="copyright">
+			Copyright &copy; {copyrightYears} - OSIRIS Open Specification for Infrastructure Resources Interchange
+			Schema<br />
+			This website content is licensed under <a
+				href="https://creativecommons.org/licenses/by-sa/4.0/"
+				target="_blank"
+				rel="noopener noreferrer">CC BY-SA 4.0</a
+			>
+		</p>
+	</div>
+
+	<nav class="site-footer-normative">
+		<a href="https://osirisjson.org/en/legal/terms-of-use">Terms of use</a>
+		<a href="https://osirisjson.org/en/legal/privacy-policy">Privacy policy</a>
+		<a href="https://osirisjson.org/en/legal/cookie-policy">Cookie policy</a>
+		<a href="mailto:community@osirisjson.org">Contacts</a>
+	</nav>
+</div>
+
+<style>
+	.site-footer {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 2.5rem;
+		margin-top: 2rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--sl-color-hairline);
+		font-size: var(--sl-text-xs);
+	}
+
+	.site-footer-prompts {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		flex: 1 1 20rem;
+	}
+
+	.prompt {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0;
+		color: var(--sl-color-text);
+	}
+
+	.prompt :global(.brand-icon) {
+		flex-shrink: 0;
+		color: var(--sl-color-text);
+	}
+
+	.prompt :global(.material-symbols-outlined) {
+		flex-shrink: 0;
+		font-size: 1rem;
+	}
+
+	.site-footer a {
+		color: var(--sl-color-text-accent);
+		text-decoration: underline;
+		text-underline-offset: 0.15em;
+	}
+
+	.copyright {
+		margin: 0.5rem 0 0;
+		color: var(--sl-color-gray-3);
+		line-height: 1.5;
+	}
+
+	.site-footer-normative {
+		display: flex;
+		flex-wrap: wrap;
+		align-self: flex-start;
+		gap: 1.5rem;
+		margin-inline-start: auto;
+	}
+
+	.site-footer-normative a {
+		color: var(--sl-color-text);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.site-footer-normative a:hover {
+		color: var(--sl-color-text-accent);
+	}
+</style>

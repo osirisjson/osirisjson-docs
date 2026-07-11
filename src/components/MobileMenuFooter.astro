@@ -1,0 +1,118 @@
+---
+// Mobile counterpart to Header.astro's right-hand nav - rendered inside
+// Starlight's stock mobile sidebar drawer (opened via MobileMenuToggle,
+// untouched). Dropdown groups are flattened into stacked, sub-labeled
+// links since there's no room for hover panels here. No ThemeSelect (site
+// is light-only) and no LanguageSelect (no locales configured).
+import { navEntries } from '../config/nav';
+import githubIconRaw from '../assets/icons/brand/github.svg?raw';
+---
+
+<div class="mobile-nav">
+	{
+		navEntries.map((entry) =>
+			entry.type === 'dropdown' ? (
+				<div class="mobile-nav-group">
+					<p class="mobile-nav-label">{entry.label}</p>
+					{entry.groups.map((group) => (
+						<ul>
+							{group.items.map((item) => (
+								<li>
+									<a
+										href={item.href}
+										target={item.target}
+										rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}
+									>
+										{item.label}
+									</a>
+								</li>
+							))}
+						</ul>
+					))}
+				</div>
+			) : (
+				<a class="mobile-nav-link" href={entry.href}>
+					{entry.label}
+				</a>
+			),
+		)
+	}
+	<a
+		class="mobile-nav-link github-link"
+		href="https://github.com/osirisjson"
+		target="_blank"
+		rel="noreferrer"
+		aria-label="GitHub"
+		set:html={githubIconRaw}
+	/>
+	<a class="try-osiris-link" href="https://osirisjson.org/en#download">Try OSIRIS</a>
+</div>
+
+<style>
+	@layer starlight.core {
+		.mobile-nav {
+			display: flex;
+			flex-direction: column;
+			gap: 1.25rem;
+			border-top: 1px solid var(--sl-color-hairline);
+			padding-block: 1rem;
+		}
+
+		.mobile-nav-label {
+			margin: 0 0 0.5rem;
+			font-size: var(--sl-text-xs);
+			color: var(--sl-color-text-accent);
+		}
+
+		.mobile-nav ul {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+
+		.mobile-nav-group + .mobile-nav-group,
+		.mobile-nav-group + .mobile-nav-link,
+		.mobile-nav-link + .mobile-nav-group {
+			margin-top: 0;
+		}
+
+		.mobile-nav a {
+			color: var(--sl-color-text);
+			font-size: var(--sl-text-sm);
+			text-decoration: none;
+		}
+
+		.mobile-nav-link {
+			font-weight: 600;
+		}
+
+		.github-link {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		.github-link :global(svg) {
+			width: 1.25rem;
+			height: 1.25rem;
+		}
+
+		.github-link :global(path) {
+			fill: currentColor;
+		}
+
+		.try-osiris-link {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 0.5rem;
+			padding: 0.5rem 1.125rem;
+			font-weight: 600;
+			background-color: var(--sl-color-bg-accent);
+			color: var(--sl-color-text-invert);
+		}
+	}
+</style>

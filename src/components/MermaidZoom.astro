@@ -1,0 +1,111 @@
+<dialog data-mermaid-zoom-dialog class="mermaid-zoom-dialog">
+	<button type="button" data-mermaid-zoom-close class="mermaid-zoom-close" aria-label="Close">
+		<span class="material-symbols-outlined">close</span>
+	</button>
+	<div data-mermaid-zoom-content class="mermaid-zoom-content"></div>
+</dialog>
+
+<style>
+	.mermaid-zoom-dialog {
+		margin: auto;
+		width: 90vw;
+		max-width: 90vw;
+		max-height: 85vh;
+		padding: 2.5rem 1.5rem 1.5rem;
+		border: 1px solid var(--sl-color-hairline);
+		border-radius: 0.5rem;
+		background: var(--sl-color-bg);
+	}
+
+	.mermaid-zoom-dialog::backdrop {
+		background: rgba(1, 24, 38, 0.6);
+		backdrop-filter: blur(4px);
+	}
+
+	.mermaid-zoom-content {
+		display: flex;
+		max-width: calc(90vw - 3rem);
+		max-height: calc(85vh - 4rem);
+		overflow: auto;
+	}
+
+	.mermaid-zoom-content :global(svg) {
+		max-width: none;
+	}
+
+	.mermaid-zoom-close {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		width: 2rem;
+		height: 2rem;
+		border: 1px solid var(--sl-color-hairline);
+		border-radius: 0.5rem;
+		background: transparent;
+		color: var(--sl-color-text);
+		cursor: pointer;
+		transition:
+			border-color 0.2s ease,
+			color 0.2s ease;
+	}
+
+	.mermaid-zoom-close:hover {
+		border-color: var(--sl-color-text-accent);
+		color: var(--sl-color-text-accent);
+	}
+</style>
+
+<script>
+	const initMermaidZoom = () => {
+		const dialog = document.querySelector<HTMLDialogElement>('[data-mermaid-zoom-dialog]');
+		const content = document.querySelector<HTMLDivElement>('[data-mermaid-zoom-content]');
+		if (!dialog || !content) return;
+
+		const addButton = (diagram: HTMLElement) => {
+			if (diagram.querySelector('[data-mermaid-zoom-btn]')) return;
+			const btn = document.createElement('button');
+			btn.type = 'button';
+			btn.className = 'mermaid-zoom-btn';
+			btn.setAttribute('data-mermaid-zoom-btn', '');
+			btn.setAttribute('aria-label', 'Zoom diagram');
+			btn.innerHTML = '<span class="material-symbols-outlined">zoom_in</span>';
+			btn.addEventListener('click', () => {
+				const svg = diagram.querySelector('svg');
+				if (!svg) return;
+				content.replaceChildren(svg.cloneNode(true));
+				dialog.showModal();
+			});
+			diagram.appendChild(btn);
+		};
+
+		document.querySelectorAll<HTMLElement>('pre.mermaid').forEach((diagram) => {
+			if (diagram.getAttribute('data-processed') === 'true') {
+				addButton(diagram);
+				return;
+			}
+			const observer = new MutationObserver(() => {
+				if (diagram.getAttribute('data-processed') === 'true') {
+					addButton(diagram);
+					observer.disconnect();
+				}
+			});
+			observer.observe(diagram, { attributes: true, attributeFilter: ['data-processed'] });
+		});
+
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) dialog.close();
+		});
+		document
+			.querySelector('[data-mermaid-zoom-close]')
+			?.addEventListener('click', () => dialog.close());
+	};
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initMermaidZoom, { once: true });
+	} else {
+		initMermaidZoom();
+	}
+</script>

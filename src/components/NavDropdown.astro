@@ -1,0 +1,211 @@
+---
+import type { NavGroup } from '../config/nav';
+
+interface Props {
+	label: string;
+	groups: NavGroup[];
+	align?: 'start' | 'end';
+	class?: string;
+}
+
+const { label, groups, align = 'start', class: className } = Astro.props;
+---
+
+<div
+	class="nav-dropdown"
+	class:list={[className, align === 'end' && 'align-end']}
+	data-nav-dropdown
+>
+	<button class="nav-dropdown-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+		<span class="nav-underline">{label}</span>
+		<span class="material-symbols-outlined chevron" aria-hidden="true">keyboard_arrow_down</span>
+	</button>
+	<div class="nav-dropdown-panel">
+		<div class="nav-dropdown-panel-inner">
+			{
+				groups.map((group, i) => (
+					<div class:list={[i > 0 && 'group-divider']}>
+						{group.title && <p class="group-title">{group.title}</p>}
+						<ul>
+							{group.items.map((item) => (
+								<li>
+									<a
+										href={item.href}
+										target={item.target}
+										rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}
+										class="nav-underline"
+									>
+										{item.label}
+									</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				))
+			}
+		</div>
+	</div>
+</div>
+
+<style>
+	.nav-dropdown {
+		position: relative;
+	}
+
+	.nav-dropdown-trigger {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		border: 0;
+		background: transparent;
+		color: var(--sl-color-text);
+		font: inherit;
+		font-size: var(--sl-text-sm);
+		cursor: pointer;
+		padding: 0.25rem 0;
+	}
+
+	.chevron {
+		font-size: 1.1rem;
+		transition: transform 0.2s ease;
+	}
+
+	.nav-dropdown.is-open .chevron,
+	.nav-dropdown:focus-within .chevron {
+		transform: rotate(180deg);
+	}
+
+	.nav-underline {
+		background-image: linear-gradient(currentColor, currentColor);
+		background-size: 0% 1px;
+		background-repeat: no-repeat;
+		background-position: 0 100%;
+		transition: background-size 0.2s ease;
+	}
+
+	.nav-dropdown-trigger:hover .nav-underline,
+	.nav-dropdown-panel a:hover .nav-underline {
+		background-size: 100% 1px;
+	}
+
+	.nav-dropdown-panel {
+		display: none;
+		position: absolute;
+		top: 100%;
+		left: 0;
+		z-index: 10;
+		padding-top: 0.75rem;
+		width: 15.5rem;
+	}
+
+	.nav-dropdown.align-end .nav-dropdown-panel {
+		left: auto;
+		right: 0;
+	}
+
+	.nav-dropdown.is-open .nav-dropdown-panel,
+	.nav-dropdown:focus-within .nav-dropdown-panel {
+		display: block;
+	}
+
+	.nav-dropdown-panel-inner {
+		background-color: var(--sl-color-bg-nav);
+		border: 1px solid var(--sl-color-hairline);
+		border-radius: 0.5rem;
+		box-shadow: var(--sl-shadow-md, 0 6px 16px -6px rgba(0, 0, 0, 0.15));
+		padding: 1.25rem;
+	}
+
+	.group-divider {
+		margin-top: 1rem;
+		border-top: 1px solid var(--sl-color-hairline);
+		padding-top: 1rem;
+	}
+
+	.group-title {
+		margin: 0 0 0.75rem;
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-text-accent);
+	}
+
+	.nav-dropdown-panel ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.nav-dropdown-panel a {
+		display: inline-block;
+		color: var(--sl-color-text);
+		font-size: var(--sl-text-sm);
+		text-decoration: none;
+	}
+</style>
+
+<script>
+	const CLOSE_DELAY_MS = 500;
+
+	const initNavDropdowns = () => {
+		const dropdowns = Array.from(document.querySelectorAll<HTMLElement>('[data-nav-dropdown]'));
+		const closeTimers = new WeakMap<Element, ReturnType<typeof setTimeout>>();
+
+		const open = (dropdown: Element) => {
+			const timer = closeTimers.get(dropdown);
+			if (timer) clearTimeout(timer);
+			dropdown.classList.add('is-open');
+			dropdown.querySelector('button')?.setAttribute('aria-expanded', 'true');
+		};
+
+		const closeImmediately = (dropdown: Element) => {
+			const timer = closeTimers.get(dropdown);
+			if (timer) clearTimeout(timer);
+			dropdown.classList.remove('is-open');
+			dropdown.querySelector('button')?.setAttribute('aria-expanded', 'false');
+		};
+
+		const closeWithDelay = (dropdown: Element) => {
+			const timer = closeTimers.get(dropdown);
+			if (timer) clearTimeout(timer);
+			closeTimers.set(
+				dropdown,
+				setTimeout(() => closeImmediately(dropdown), CLOSE_DELAY_MS),
+			);
+		};
+
+		dropdowns.forEach((dropdown) => {
+			const trigger = dropdown.querySelector('button');
+
+			dropdown.addEventListener('mouseenter', () => {
+				dropdowns.forEach((other) => other !== dropdown && closeImmediately(other));
+				open(dropdown);
+			});
+			dropdown.addEventListener('mouseleave', () => closeWithDelay(dropdown));
+
+			trigger?.addEventListener('click', () => {
+				const isOpen = dropdown.classList.contains('is-open');
+				dropdowns.forEach((other) => other !== dropdown && closeImmediately(other));
+				if (isOpen) closeImmediately(dropdown);
+				else open(dropdown);
+			});
+		});
+
+		document.addEventListener('click', (event) => {
+			dropdowns.forEach((dropdown) => {
+				if (!dropdown.contains(event.target as Node)) closeImmediately(dropdown);
+			});
+		});
+
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape') dropdowns.forEach(closeImmediately);
+		});
+	};
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initNavDropdowns, { once: true });
+	} else {
+		initNavDropdowns();
+	}
+</script>
