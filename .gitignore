@@ -1,0 +1,91 @@
+# Operating System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.project
+.settings/
+.classpath
+settings.local.json
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.npm
+.yarn-integrity
+.astro
+
+# Cloudflare artifacts
+.wrangler/
+.dev.vars
+
+# Allow the lockfile (needed for Cloudflare Pages builds)
+!package-lock.json
+!yarn.lock
+!pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+out/
+target/
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+*.swp
+.cache/
+*.orig
+
+# Archives
+*.7z
+*.gz
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.iso
+
+# Binary executables
+# Windows
+*.exe
+*.msi
+*.dll
+*.sys
+
+# macOS
+*.dmg
+*.pkg
+*.app/
+
+# Linux / Unix
+*.deb
+*.rpm
+*.bin
+*.out
+*.AppImage
+
+# Secrets (just in case)
+.env.local
+.env.*.local
+secrets/
+*.pem
+*.key
