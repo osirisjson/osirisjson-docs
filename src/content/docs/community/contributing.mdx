@@ -1,0 +1,103 @@
+---
+title: 'Contributing to OSIRIS JSON'
+description: 'Learn how to contribute to the OSIRIS JSON ecosystem. Read about role progression, the change process, and community governance.'
+lastUpdated: 2026-07-10T09:00:00Z
+sidebar:
+  label: 'Contributing'
+  order: 0
+---
+
+import { Badge, Steps, Card, CardGrid } from '@astrojs/starlight/components';
+
+Thank you for your interest in contributing to **OSIRIS JSON**.
+
+OSIRIS is a vendor-neutral, open specification for infrastructure resource interchange. It is community-driven, openly reviewable, and designed to be practical to implement working under full user control without any third-party SaaS licence or AI platform to operate.
+
+This guide outlines our project roles, decision-making processes, and step-by-step instructions for proposing, reviewing, and implementing changes.
+
+---
+
+## Community Roles & Progression
+
+We believe that project responsibility should follow demonstrated trust, constructive technical judgment, and sustained contribution. We have defined three roles path within the OSIRIS JSON ecosystem:
+
+<CardGrid>
+  <Card title="Contributor">
+    Any community member who contributes code, documentation, schemas, examples, or feedback.
+    
+    <Badge text="How to join" variant="note" /> No formal status is required. Anyone can submit issues, join GitHub Discussions, or open a pull request.
+  </Card>
+
+  <Card title="Reviewer">
+    Experienced contributors who provide regular technical feedback, especially regarding schema changes, compatibility impacts, and security.
+    
+    <Badge text="Progression" variant="tip" /> Invite-only. Earned by submitting high-quality PRs, providing thorough feedback on others' proposals, and helping maintain vendor neutrality.
+  </Card>
+
+  <Card title="Maintainer">
+    Responsible for the quality, coherence, and long-term direction of the specification, schemas, producers, and release notes. Maintainers have merge and release authority.
+    
+    <Badge text="Progression" variant="tip" /> Invited by existing maintainers after a sustained pattern of trusted work, technical leadership, and respect for the [Code of Conduct](http://osirisjson.org/en/commitments/codeofconduct).
+  </Card>
+</CardGrid>
+
+---
+
+## Decision-Making Principles
+
+When evaluating changes to the specification, schemas, or tooling, the community follows these core principles:
+- **Simplicity**: Favor lightweight, readable JSON over complex nesting.
+- **Vendor Neutrality**: The core specification must not favor any single cloud provider or hardware vendor.
+- **Extensibility**: Support customization (via the `extensions` map) without causing core schema fragmentation.
+- **Explicit over Implicit**: Document relationships and expectations explicitly rather than relying on consumer assumptions.
+- **Practicality**: The specification must remain straightforward for independent developers to implement in custom producers and consumers.
+
+---
+
+## The Change Process
+
+Proposing a change to the OSIRIS JSON specification, schemas, producers or documentation follows a structured workflow:
+
+<Steps>
+  1. **Discuss the Problem**
+     Before writing code or schema changes, open an issue or start a GitHub Discussion selecting the repository of interest. Explain the use case, the limitation you are encountering, and your proposed change. This allows the community to align on the problem first.
+     
+  2. **Prepare the Pull Request**
+     Fork the repository and implement your changes. If modifying this documentation repository, update the relevant `.mdx` files. If modifying schemas, ensure you update the JSON Schema and provide accompanying validation tests.
+     
+  3. **Technical Review**
+     Reviewers and maintainers will evaluate your pull request.
+     
+  4. **Merge and Release**
+     Once rough consensus is reached, a maintainer will merge the pull request. Normative changes will be scheduled and tagged in accordance with our versioning policy.
+  </Steps>
+
+---
+
+## Types of Changes
+
+To maintain clarity, we distinguish between two types of changes:
+
+### 1. Editorial Changes (Non-Normative)
+Editorial changes are improvements that do not alter the requirements or behavior of the specification. These include:
+- Fixing spelling or grammatical errors.
+- Restructuring documentation sections for better readability.
+- Clarifying prose or adding non-normative examples.
+- Editorial changes can be merged quickly after basic review.
+
+### 2. Normative Changes
+Normative changes alter requirements, schemas, validation logic, or the obligations of producers and consumers. OSIRIS JSON uses established [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119) keywords (e.g., `MUST`, `SHOULD`, `MAY`, `MUST NOT`) to define normative requirements. 
+
+Normative changes require:
+- A detailed compatibility analysis.
+- Updates to validation levels (Level 1, 2, or 3).
+- Creation or updates of test fixtures (golden files).
+- Approval from at least one maintainer.
+
+---
+
+## Code of Conduct
+
+Participation in the OSIRIS JSON project is governed by our Code of Conduct. We expect all contributors to adhere to its terms in all project spaces (issues, discussions, PRs, and community meetups).
+
+[Read the Code of Conduct](https://osirisjson.org/en/commitments/codeofconduct)

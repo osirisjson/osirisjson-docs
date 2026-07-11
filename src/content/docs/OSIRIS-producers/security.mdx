@@ -1,0 +1,16 @@
+---
+title: 'OSIRIS JSON producers security'
+description: 'Producer source code is continuously analyzed by SonarCloud for vulnerabilities, code smells, and security hotspots.'
+lastUpdated: 2026-06-28T00:00:00Z
+sidebar:
+  label: 'Security'
+  order: 2
+---
+
+Producer source code is continuously analyzed by [SonarCloud](https://sonarcloud.io/project/overview?id=osirisjson_osiris-producers) for vulnerabilities, source code issues, and security hotspots. Every pull request must pass a quality gate that enforces an **A security rating** before it can be merged.
+
+Additionally, OSIRIS JSON producers include by specification and by design built-in safety guardrails:
+
+- **Secret redaction** - the `--safe-failure-mode` flag (default: `fail-closed`) prevents credentials and sensitive values leaking from your infrastructure into the OSIRIS JSON output document.
+- **Read-only access** - producers never modify target device or platform configuration. All calls are read-only operations.
+- **No persistent credential storage** - OSIRIS JSON producers do not cache credentials or store data beyond the emitted OSIRIS JSON file.

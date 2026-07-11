@@ -1,0 +1,146 @@
+---
+title: 'Install OSIRIS JSON Producers'
+description: 'OSIRIS JSON Producers are available for MacOS, Windows, Linux. If you have Go installed your can run directly in OSIRIS JSON producer in your environment.'
+lastUpdated: 2026-06-21T00:00:00Z
+sidebar:
+  label: 'How to install'
+  order: 1
+---
+
+import { CardGrid, Card } from '@astrojs/starlight/components';
+
+Pre-built binaries are available on the [Releases page](https://github.com/osirisjson/osiris-producers/releases) for Linux, macOS and Windows. No Go toolchain is required.
+
+## Download
+
+Pick the archive for your OS and architecture, or install directly with Go (see [Install via Go](#install-via-go-if-you-have-go-122) below):
+
+<CardGrid>
+	<Card title="Windows">
+		[Download from Releases](https://github.com/osirisjson/osiris-producers/releases)
+	</Card>
+	<Card title="macOS">
+		[Download from Releases](https://github.com/osirisjson/osiris-producers/releases)
+	</Card>
+	<Card title="Linux">
+		[Download from Releases](https://github.com/osirisjson/osiris-producers/releases)
+	</Card>
+</CardGrid>
+
+## Linux
+
+**Archive:**
+
+```bash
+tar -xzf osiris-producers_<version>_linux_amd64.tar.gz
+sudo mv osirisjson-producer /usr/local/bin/
+osirisjson-producer --version
+```
+
+**Debian / Ubuntu (.deb):**
+
+```bash
+sudo dpkg -i osiris-producers_<version>_linux_amd64.deb
+osirisjson-producer --version
+```
+
+**RHEL / Fedora / CentOS (.rpm):**
+
+```bash
+sudo rpm -i osiris-producers_<version>_linux_amd64.rpm
+osirisjson-producer --version
+```
+
+## macOS
+
+**Homebrew (recommended):**
+
+```bash
+brew tap osirisjson/osiris-producers
+brew install osirisjson-producer
+```
+
+Homebrew handles quarantine automatically - no Gatekeeper warning, no extra steps.
+
+**Archive (alternative):**
+
+```bash
+tar -xzf osiris-producers_<version>_darwin_arm64.tar.gz
+sudo mv osirisjson-producer /usr/local/bin/
+```
+
+### Gatekeeper warning (archive installs only)
+
+macOS Gatekeeper will block the binary on first run because it is not yet
+notarized with an Apple Developer certificate. You will see:
+
+> **osirisjson-producer** cannot be opened because the developer cannot be verified.
+
+**Fix - command line (one-time, recommended):**
+
+```bash
+xattr -d com.apple.quarantine /usr/local/bin/osirisjson-producer
+```
+
+**Fix - Finder:**
+
+Right-click the binary -> Open -> click "Open" in the dialog.
+macOS remembers the exception after the first run.
+
+After applying either fix, the binary runs normally with no further prompts.
+
+## Windows
+
+Extract the `.zip` archive and move `osirisjson-producer.exe` to a directory
+on your `%PATH%`. A user-writable location that works without admin rights:
+
+```text
+%LOCALAPPDATA%\Programs\osirisjson\
+```
+
+To add it to your PATH permanently (no admin required):
+
+```powershell
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";$env:LOCALAPPDATA\Programs\osirisjson", "User")
+```
+
+### Windows SmartScreen warning
+
+Windows SmartScreen may show "Windows protected your PC" on first run because
+the binary is not yet signed with a commercial certificate.
+
+**Fix:**
+
+1. Click **More info**
+2. Click **Run anyway**
+
+Alternatively, right-click `osirisjson-producer.exe` -> Properties ->
+check the **Unblock** box at the bottom -> OK. After that the binary runs
+without any prompt.
+
+## Verify the download
+
+Each release includes a `osiris-producers_<version>_checksums.txt` file.
+Verify the archive before extracting:
+
+```bash
+# Linux / macOS
+sha256sum -c osiris-producers_<version>_checksums.txt --ignore-missing
+
+# Windows (PowerShell)
+Get-FileHash osiris-producers_<version>_windows_amd64.zip -Algorithm SHA256
+```
+
+Compare the output against the matching line in `checksums.txt`.
+
+## Install via Go (if you have Go 1.22+)
+
+```bash
+go install go.osirisjson.org/producers/cmd/...@latest
+```
+
+This installs all binaries at once.
+
+## Quick start
+
+Full documentation: [Getting Started](/osiris-producers/getting-started/)

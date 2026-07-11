@@ -1,0 +1,140 @@
+---
+title: 'OSIRIS JSON Go Producer SDK'
+description: 'Documentation for the Go Producer SDK. Learn how to leverage built-in builders, validators, deterministic ID generation, and the golden fixtures test harness.'
+lastUpdated: 2026-07-10T09:00:00Z
+sidebar:
+  label: 'Go Producer SDK'
+  order: 2
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+The **Go Producer SDK** provides Go developers with the base primitives needed to build reliable discovery agents. By utilizing the SDK, you ensure that your producer conforms to the core OSIRIS JSON schema, implements deterministic sorting, validates constraints, and provides robust local testing.
+
+---
+
+## SDK Architecture & Components
+
+The SDK is organized into three primary packages:
+
+<Steps>
+  1. **`sdk`** (`go.osirisjson.org/producers/pkg/sdk`): Contains core types, the document builder, validators, and ID generation utilities.
+  2. **`osirismeta`** (`go.osirisjson.org/producers/pkg/osirismeta`): Provides metadata helpers, validation parameters, and projection configurations.
+  3. **`testharness`** (`go.osirisjson.org/producers/pkg/testharness`): A testing harness for asserting output determinism and validating against golden fixture files.
+</Steps>
+---
+
+## 1. Document Builder & Validation
+
+The SDK provides `sdk.DocumentBuilder` to safely assemble a valid OSIRIS JSON document. Rather than manually creating raw structs, the builder automatically validates constraints, verifies reference integrity (e.g. connections pointing to existing resources), checks for duplicate IDs, sorts elements alphabetically by ID, and scans properties for unredacted secrets.
+
+```go
+import "go.osirisjson.org/producers/pkg/sdk"
+
+// Create a builder associated with the runtime context
+builder := sdk.NewDocumentBuilder(ctx).
+    WithGenerator("osirisjson-producer-custom", "0.1.0").
+    WithScope(sdk.Scope{
+        Providers: []string{"custom-provider"},
+    })
+
+// Add elements programmatically
+builder.AddResource(myResource)
+builder.AddConnection(myConnection)
+builder.AddGroup(myGroup)
+
+// Build performs validation, duplicate checking, secret scanning, and sorting
+doc, err := builder.Build()
+if err != nil {
+    log.Fatalf("failed to build document: %v", err)
+}
+```
+
+---
+
+## 2. Deterministic ID Generation
+
+To ensure resource, connection, and group IDs are stable across multiple discovery cycles, the SDK provides deterministic ID generation utilities.
+
+- **Resource IDs**: Generated deterministically using `sdk.Hash16` and `sdk.DeriveHint` to derive clean, stable identifiers from native IDs.
+- **Connection IDs**: Uses `sdk.ConnectionCanonicalKey` and `sdk.BuildConnectionID` to enforce symmetry for bidirectional connections.
+- **Group IDs**: Uses `sdk.GroupID` with `sdk.GroupIDInput` to represent boundary domains.
+
+### Example ID Generation
+
+```go
+import "go.osirisjson.org/producers/pkg/sdk"
+
+// Generate stable Resource ID
+canonicalSuffix := "us-east-1|subnet-12345678"
+canonicalKey := fmt.Sprintf("v1|network.subnet|%s", canonicalSuffix)
+hash := sdk.Hash16(canonicalKey)
+hint := sdk.DeriveHint(canonicalSuffix, hash)
+subnetID := fmt.Sprintf("res-network.subnet-%s-%s", hint, hash)
+// Output: "res-network.subnet-subnet-12345678-hash16..."
+
+// Generate stable Group ID
+vlanGroupID := sdk.GroupID(sdk.GroupIDInput{
+    Type:          "network.vlan",
+    BoundaryToken: "router-01|vlan-100",
+})
+```
+
+---
+
+## 3. Golden Fixture & Determinism Testing
+
+Producers must include snapshot tests to verify their output. The `testharness` package compares the generated OSIRIS JSON payload against a checked-in "golden" JSON fixture and asserts that the producer output is fully deterministic.
+
+If the output changes, tests fail. Developers can update the golden snapshots by setting the `OSIRIS_UPDATE_GOLDEN=1` environment variable.
+
+### Example Test Implementation
+
+```go
+package custom_test
+
+import (
+	"testing"
+	
+	"go.osirisjson.org/producers/pkg/sdk"
+	"go.osirisjson.org/producers/pkg/testharness"
+	"github.com/your-org/osirisjson-producer-custom/producer"
+)
+
+func TestProducer_Golden(t *testing.T) {
+	// 1. Initialize a deterministic test context
+	ctx := testharness.NewTestContext(t)
+	
+	// 2. Initialize the producer in offline/mock mode
+	p := producer.NewProducer(producer.Config{
+		Offline: true,
+	})
+
+	// 3. Run the discovery process to generate the OSIRIS JSON payload
+	snapshot, err := p.Collect(ctx)
+	if err != nil {
+		t.Fatalf("failed to collect topology: %v", err)
+	}
+
+	// 4. Assert the snapshot output against the golden file
+	testharness.AssertGolden(t, snapshot, "testdata/golden/custom-router.json")
+	
+	// 5. Ensure the collection process is 100% deterministic (free of map iteration noise, etc.)
+	testharness.AssertDeterministic(t, p, ctx)
+}
+```
+
+### Running the Tests
+
+<Tabs>
+  <TabItem label="Run Tests">
+    ```bash
+    go test ./...
+    ```
+  </TabItem>
+  <TabItem label="Update Golden Snapshots">
+    ```bash
+    OSIRIS_UPDATE_GOLDEN=1 go test ./...
+    ```
+  </TabItem>
+</Tabs>

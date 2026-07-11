@@ -1,0 +1,67 @@
+---
+title: 'OSIRIS JSON OT Infrastructure Examples'
+description: 'Browse reference OSIRIS JSON documents for Operational Technology (OT) and facility control systems. Learn about IT/OT network coexistence and asset mappings.'
+lastUpdated: 2026-07-10T09:00:00Z
+sidebar:
+  label: 'OT Infrastructure examples'
+  order: 1
+---
+
+import { CardGrid, Card, Aside } from '@astrojs/starlight/components';
+
+As Operational Technology (OT) and Information Technology (IT) systems continue to converge, organizations face the challenge of documenting and auditing physical facilities alongside cloud systems. OSIRIS JSON provides the necessary structural extensions to represent industrial devices, building automation hardware, and security controls within the same unified topology schema.
+
+These reference examples illustrate how to map physical infrastructure components such as sensors, PLCs, card readers, and surveillance equipment and document their network attachment, power supply configurations, and data flow paths.
+
+---
+
+## Exploring the OT Example Catalog
+
+Explore the catalog of physical and facility infrastructure examples. Open or download the raw JSON reference files directly:
+
+<CardGrid>
+  <Card title="Minimal OT Sensor">
+    A single Emerson temperature sensor deployed for environmental monitoring. Ideal for understanding the minimal properties needed to document an OT-specific asset.
+    
+    [Open the minimal OT sensor example](/examples/v1.0/OT/on-premise/osiris_minimal_ot_infrastructure.json)
+  </Card>
+
+  <Card title="IT/OT Cross-Network Topology">
+    A hybrid topology mapping the boundaries and connections between IT systems (database, file servers) and OT systems (industrial historians, HMI). It showcases firewall segmentation rules and security gateway boundaries.
+    
+    [Open the IT/OT network example](/examples/v1.0/OT/on-premise/osiris_it_ot_cross_network_topology.json)
+  </Card>
+
+  <Card title="IP Security Camera (CCTV)">
+    An IP-based physical surveillance camera connected to a Network Video Recorder (NVR) over Power over Ethernet (PoE) infrastructure. Shows how to map power and network dependency simultaneously.
+    
+    [Open the security camera example](/examples/v1.0/OT/on-premise/osiris_security_camera.json)
+  </Card>
+
+  <Card title="Door Access Control">
+    A physical security entry control system including an RFID card reader, door controller panel, and magnetic lock. Demonstrates facility containment and path-level connectivity.
+    
+    [Open the access control example](/examples/v1.0/OT/on-premise/osiris_door_access_control.json)
+  </Card>
+
+  <Card title="PLC-Controlled Industrial Printer">
+    A Programmable Logic Controller (PLC) governing an industrial label printer. Illustrates how serial-to-ethernet bridges and bus-protocol components fit into an IP-dominated topology.
+    
+    [Open the industrial printer example](/examples/v1.0/OT/on-premise/osiris_industrial_printer.json)
+  </Card>
+</CardGrid>
+
+---
+
+## Key IT/OT Modeling Concepts
+
+When analyzing these examples, keep the following architectural concepts in mind:
+
+### 1. Unified ID Space for Hybrid Assets
+In OT systems are highly standardized and traditional compared to IT in constant evolution and devices may not have typical identifiers like cloud-like UUIDs or ARNs. OSIRIS uses deterministic, physical IDs (often derived from serial numbers, MAC addresses, or manually assigned facility-based tags like ISA-95 hierarchical strings, e.g., `ot::mxp::fac-01::door-01::ctrl`). This unifies physical assets with virtual instances under a single ID space.
+
+### 2. Multi-Protocol Edge Connections
+While IT network connections are typically TCP/IP Ethernet links, OT relies on diverse transports (e.g., Modbus, BACnet, serial connections, PoE). OSIRIS connections use custom subtypes to explicitly model these protocols and physical power requirements without breaking base validation rules.
+
+### 3. Security Boundary Representation
+OT security relies on strict zoning (such as the Purdue Model). OSIRIS groups are used to represent these security zones (e.g., Level 0 to Level 4) and firewalled interfaces. This enables security auditors to programmatically verify that no direct connections traverse the boundary between the public internet and control-room PLCs.

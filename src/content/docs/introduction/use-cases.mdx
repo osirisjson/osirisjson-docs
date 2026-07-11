@@ -1,0 +1,146 @@
+---
+title: 'OSIRIS JSON Use Cases'
+description: 'Explore the 10 high-impact use cases of OSIRIS JSON across audits, AI reasoning, IT/OT convergence, local snapshots, infrastructure topology, drift detection, and incident response.'
+lastUpdated: 2026-07-10T09:00:00Z
+sidebar:
+  label: 'Real-World use cases'
+  order: 3
+---
+
+import { CardGrid, Card } from '@astrojs/starlight/components';
+
+OSIRIS JSON is a **vendor-neutral JSON interchange specification** for describing infrastructure resources, their properties, and their topological relationships across heterogeneous IT and OT environments. 
+
+As a **static snapshot format**, OSIRIS JSON represents exactly **what exists and how it relates** at a specific point in time. This enables organizations to decouple discovery logic from downstream systems of record, analytics engines, and visualization pipelines.
+
+Below are the ten high-impact use cases where OSIRIS JSON bridges the gap between raw, vendor-specific infrastructure configurations and downstream business value.
+
+---
+
+## 1. Point-in-Time Audit & Compliance Evidence
+
+### The Problem
+Auditors require proof of infrastructure state, usually forcing engineering and security teams to install third-party scanning agents or spend time to manually taking screenshots, running ad-hoc scripts, and exporting CSVs or documents it's a mutual stressful moment for Auditors and for you and your team to provide on-time clear informations.
+
+### The Solution
+Generate an OSIRIS JSON infrastructure snapshot. It is a portable, UTC-labeled, vendor-neutral artifact that captures the precise inventory and topology of your environments.
+
+### The Advantage
+Auditors receive exactly the data they need in an easily parsable format. The engineering team controls the extraction process, ensuring zero proprietary software is installed on internal systems and sensitive data (such as credentials and private keys) is redacted at the source.
+
+---
+
+## 2. Granular AI Context Provisioning (MCP Integration)
+
+### The Problem
+Feeding entire infrastructure configurations to an LLM exceeds context windows, increases token costs, and risks mixing irrelevant data with critical reasoning prompts, leading to AI hallucinations.
+
+### The Solution
+Use OSIRIS JSON as the foundational database for a local Model Context Protocol (MCP) server. By indexing the JSON document locally, the MCP server acts as an intelligent mediator between the engineer, the local LLM, and the OSIRIS JSON infrastructure snapshot.
+
+### The Advantage
+When an engineer asks an LLM a question, the MCP server exposes granular tools (e.g., `get_device_details`, `query_vlan`). The LLM queries the OSIRIS JSON snapshot dynamically, ensuring highly accurate, isolated reasoning without exposing the entire OSIRIS JSON document in a single prompt. This process optimize a lot your costs and efficiency reducing drastically the allucinations by operating on a standard JSON format repeated across all infrastructure cases.
+
+---
+
+## 3. Automated Docs-as-Code & Topology Generation
+
+### The Problem
+Architecture diagrams, network maps, and topology documents decay the moment they are published. Manual updates are rarely prioritized, leading to outdated documentation that hinders decision-making.
+
+### The Solution
+Feed OSIRIS JSON snapshots into the OSIRIS Consumers pipeline to automatically generate Markdown documentation and interactive Mermaid.js and high quality automated Draw.io diagrams.
+
+### The Advantage
+Visuals and documentation are always perfectly synced with the actual state of the infrastructure. When the something changes, the CI/CD pipeline simply pulls a new OSIRIS snapshot and regenerates the diagrams and documentation automatically.
+
+---
+
+## 4. Deterministic Configuration Drift Detection
+
+### The Problem
+Identifying what changed in a hybrid environment (between on-premise hypervisors, Linux servers, and AWS) over a weekend or during an undocumented change window is like finding a needle in a haystack.
+
+### The Solution
+Take a baseline OSIRIS JSON snapshot on Friday, a series on Saturday and Sunday, and a target snapshot on Monday.
+
+### The Advantage
+Because OSIRIS uses a strict, vendor-neutral schema, you can run a simple, programmatic diff between the JSON files to instantly identify missing resources, altered connections, or modified metadata regardless of the underlying provider or vendor namespace.
+
+---
+
+## 5. Zero-Knowledge Handover & Incident Triage
+
+### The Problem
+When inheriting a legacy system with false believe that everything works even if not documented properly and superficially drawn on topology or responding to a P1 incident at 2:00 AM, whoever is the candidate it waste hours just trying to figure out what is connected to what before they can even begin troubleshooting or understanding what's been left by predecessors and on top of it you can't trust that is working just because it's written and documented so you have to start from a baseline.
+
+### The Solution
+An OSIRIS JSON document provides an immediate, machine-readable "digital polaroid" of the environment, establishing an instant topological baseline.
+
+### The Advantage
+You do not need to log into different proprietary vendor portals, run scripts or query different clouds to map the blast radius. The topology relationships are explicitly declared in the JSON, allowing you to get visibility and trace connections instantly and without stress.
+
+---
+
+## 6. CMDB and IPAM Reconciliation
+
+### The Problem
+Systems of record like ServiceNow, NetBox, or proprietary CMDBs are only as good as the data fed into them, which is often manually entered, incomplete, and highly inaccurate.
+
+### The Solution
+Use OSIRIS JSON as the universal translation layer between the actual, running infrastructure and the CMDB.
+
+### The Advantage
+Instead of writing and maintaining custom, complex API integrations for every single network switch, virtualization cluster, and cloud provider, engineers write a single integration that reads the OSIRIS JSON format and updates the system of record with ground truth.
+
+---
+
+## 7. Hybrid Cloud Migration Baselining
+
+### The Problem
+Planning a migration from an on-premise data center to a public hyperscaler requires a flawless inventory of the existing state, but discovering dependencies across legacy silos is notoriously difficult.
+
+### The Solution
+Run an OSIRIS Producer on the legacy environment to capture all compute, storage, and networking dependencies.
+
+### The Advantage
+The migration team gets a complete, vendor-neutral map of the legacy architecture. They can query the JSON to group workloads, identify orphaned resources, and map out the target architecture before moving a single byte.
+
+---
+
+## 8. Security Blast Radius Analysis
+
+### The Problem
+When a specific resource (such as a database, container, or network switch) is compromised, security teams struggle to quickly identify all downstream dependencies and lateral path exposures.
+
+### The Solution
+Query the connections arrays within the OSIRIS JSON document.
+
+### The Advantage
+Because OSIRIS maps infrastructure as a graph with explicit source and target relationships, security teams can programmatically traverse the graph to identify every single resource exposed to the compromised node, isolating the threat immediately.
+
+---
+
+## 9. IT/OT Convergence & Industrial Control Auditing
+
+### The Problem
+Operational Technology (OT) networks governing physical assets (like PLCs, SCADA hosts, and facility access systems) operate under strict safety and air-gap requirements. Integrating or auditing these systems alongside traditional IT systems is incredibly difficult because OT devices use legacy, physical-layer protocols (e.g., Modbus, BACnet, serial) and lackIT-like APIs or UUIDs.
+
+### The Solution
+Represent physical OT hardware, security zones (such as Purdue Model levels), and non-IP connections in a unified OSIRIS JSON document, utilizing structural extensions tailored for industrial systems.
+
+### The Advantage
+OSIRIS JSON Producers is designed to run with zero third-party dependencies, completely offline and on-premise making it perfect for OT environments with strict air-gapping requirements. Auditors and security officers get a single, vendor-neutral topology mapping the boundaries between IT enterprise networks and OT control systems. They can programmatically verify zoning compliance and detect illegal cross-boundary connections without executing invasive active discovery scans that risk interrupting sensitive industrial machinery.
+
+---
+
+## 10. Private and on-premise Infrastructure Snapshots with Automation First Philosophy and AI when needed
+
+### The Problem
+Uploading raw infrastructure data, routing tables, and topology details to external cloud platforms or leaving SaaS-based AI tools introduces unacceptable security and privacy risks this include consultancy partners that continuously ask you to dump your infrastructure data installing their software or connecting their platforms just to answer simple questions over the data your already have. Furthermore, relying entirely on AI models to discover or guess infrastructure details is proven to be unreliable, higly costly and often results in hallucinated, incomplete, or inaccurate mapping.
+
+### The Solution
+Run OSIRIS JSON Producers locally and privately on your own machines. This offline-first approach operates under the philosophy of **"Automation first, AI when needed"** using deterministic, programmatic discovery scripts to generate a 100% accurate snapshot of the infrastructure first, and only feeding specific, redacted portions to local AI models (via MCP) if and when complex reasoning is required.
+
+### The Advantage
+Your infrastructure data remains entirely under your control. By prioritizing deterministic automation running on-premise OSIRIS JSON Producers over AI guesswork, you guarantee absolute accuracy in the generated schema. If you choose to leverage AI later, you do so using a structured, local, and redacted JSON file, avoiding data leakage while keeping API costs low and eliminating LLM hallucinations.

@@ -1,0 +1,102 @@
+---
+title: 'Contribution Style Guidelines'
+description: 'Style guidelines for contributing to OSIRIS JSON documentation website.'
+lastUpdated: 2026-07-11T09:00:00Z
+sidebar:
+  label: 'Style Guidelines'
+  order: 1
+---
+
+Welcome to the style guidelines for the **OSIRIS JSON** documentation website. As an open-source, community-driven project, we aim to keep our documentation highly accurate, clear, and readable. 
+
+Our audience is diverse: it includes implementation engineers, DevOps developers, technical copywriters, solution architects, and non-technical compliance auditors. Therefore, our documentation style must strike a balance remaining technically rigorous while remaining accessible and straightforward.
+
+---
+
+## Core Principles
+
+When writing or editing documentation, keep the following principles in mind:
+
+### 1. Enforce Precise Terminology
+* **Specification vs. Standard**: Always refer to OSIRIS JSON as a **Specification** (or "open specification"). Never refer to it as a "Standard" or "Industry Standard" to maintain legal and professional consistency.
+* **Producers & Consumers**: Clearly distinguish between *Producers* (tools that extract and generate OSIRIS JSON documents) and *Consumers* (tools that read and transform OSIRIS JSON documents).
+* **Local-First & Private**: Emphasize our local-first philosophy. OSIRIS JSON does not require external SaaS third-party dependencies, subscription fees, or AI platform access.
+
+### 2. Tone and Voice
+* **Clear & Direct**: Write in active voice. Avoid unnecessary technical jargon or overly complex sentence structures.
+* **Strict but Accessible**: State requirements clearly and precisely without over-engineering explanations.
+* **Inclusive & Professional**: Use gender-neutral language (e.g., "they/them" instead of "he/she", "contributors" instead of "guys").
+* **RFC 2119 Keywords**: Use standard keywords like `MUST`, `SHOULD`, and `MAY` (capitalized) *only* when describing normative requirements within the technical specification pages. For general guides and documentation, use normal descriptive language.
+
+---
+
+## File and Frontmatter Requirements
+
+All articles on `docs.osirisjson.org` are written in MDX (Markdown with JSX) and must conform to the following formatting standards:
+
+### 1. Filenames and Paths
+Use lowercase with hyphens for all directories and file names (e.g., `getting-started.mdx` instead of `GettingStarted.mdx` or `getting_started.mdx`).
+
+### 2. Frontmatter Block
+Every MDX file must begin with a YAML frontmatter block containing the following fields:
+
+```yaml
+---
+title: 'Descriptive Page Title'
+description: 'A brief, SEO-friendly summary of the article (1-2 sentences).'
+lastUpdated: 2026-07-11T10:00:00Z
+sidebar:
+  label: 'Sidebar Label'
+  order: 3
+---
+```
+* **title**: Keep it concise but descriptive.
+* **description**: Essential for search visibility. Summarize what the user will learn on this page.
+* **lastUpdated**: Use the ISO 8601 UTC format. Update this when making non-trivial modifications.
+* **sidebar**: Set a short, clean `label` and define the `order` weight to manage its position in the sidebar menu.
+
+---
+
+## Content Structure
+
+To maintain visual and reading consistency across the site:
+
+### 1. Heading Hierarchy
+* Use `## Headings` (H2) for main sections, and `### Subheadings` (H3) for sub-sections.
+* Avoid using H4 or H5 headings unless managing deeply nested technical details.
+* Do not skip heading levels (e.g., do not place an H3 directly under an H1).
+
+### 2. Code Blocks and Casing
+* **Language Tags**: Always specify the language for syntax highlighting in triple-backtick code blocks (e.g., `json`, `go`, `bash`).
+* **JSON Properties**: Use `camelCase` for JSON properties and keys, matching the official schema specifications.
+* **Go and Code Reference**: Follow standard Go naming conventions (`CamelCase` for exported identifiers).
+
+---
+
+## Documentation Maintenance
+
+Writing an article is only the first step. To maintain high quality over time:
+
+1. **Verify Code Examples**: Whenever a schema version updates, audit all articles containing relevant code blocks to ensure JSON payloads conform to the updated schema.
+2. **Prevent Dead Links**: Use relative paths for internal documentation links (e.g., `[Getting Started](/OSIRIS-producers/getting-started/)`) and verify that they resolve correctly.
+3. **Redact Sensitive Information**: When providing example configurations or terminal outputs, ensure all credentials, private IP addresses, system paths, and organization names are fictionalized or redacted.
+
+### Refer to the standards below
+
+#### RFC5737
+
+**IPv4 Address Blocks Reserved for Documentation**
+[RFC 5737](https://datatracker.ietf.org/doc/html/rfc5737)
+Defines the three IPv4 unicast address blocks reserved for use in examples in OSIRIS JSON specifications and other documents.
+
+#### RFC3849
+
+**IPv6 Address Blocks Reserved for Documentation**
+[RFC 3849](https://datatracker.ietf.org/doc/html/rfc3849)
+Defines the three IPv6 unicast address blocks reserved for use in examples in OSIRIS JSON specifications and other documents.
+
+#### RFC2606
+
+**TLDs for Testing, & Documentation Examples**
+[RFC 2606](https://datatracker.ietf.org/doc/html/rfc2606)
+Defines current or future actual TLD names in the global DNS, can be used for private testing of existing DNS related code, examples in documentation, DNS related experimentation, invalid DNS names, or other similar uses.

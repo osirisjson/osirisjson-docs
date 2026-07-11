@@ -1,0 +1,247 @@
+---
+title: 'Enhance your formatting with components'
+description: 'Learn how to use Astro Starlight components to format and enhance your OSIRIS JSON documentation pages.'
+lastUpdated: 2026-07-11T10:00:00Z
+sidebar:
+  label: 'Using Components'
+  order: 2
+---
+
+import { Aside, Card, CardGrid, Steps, Tabs, TabItem, Badge, LinkCard } from '@astrojs/starlight/components';
+
+Astro Starlight provides a rich set of built-in components that help make documentation interactive, clean, and easy to read. You can use these components directly in your MDX files.
+
+This guide provides simple, copy-pasteable examples for the most common components used in the OSIRIS JSON documentation.
+
+---
+
+## Icons
+
+For the OSIRIS JSON documentation, we primarily use [Google's Material Icons](https://fonts.google.com/icons).
+
+---
+
+## Asides (Alerts & Callouts)
+
+Asides are useful for highlighting secondary information, tips, warnings, or critical notes. Starlight supports them natively using the `:::` markdown syntax. **No imports are required.**
+
+### Types of Asides
+
+#### 1. Note (Default)
+Use for general background information or contextual details.
+<Aside type="note">
+This is a standard note. It helps provide extra context without interrupting the main text flow.
+</Aside>
+
+```markdown
+<Aside type="note">
+This is a standard note. It helps provide extra context without interrupting the main text flow.
+</Aside>
+```
+
+#### 2. Tip
+Use for best practices, shortcuts, or optimization recommendations.
+<Aside type="tip">
+Always run `osiris-validator` in your CI/CD pipeline to verify JSON outputs before deployment.
+</Aside>
+
+```markdown
+<Aside type="tip">
+Always run `osiris-validator` in your CI/CD pipeline to verify JSON outputs before deployment.
+</Aside>
+```
+
+#### 3. Caution
+Use for warnings about data security, potential mistakes, or sanitization rules.
+<Aside type="caution">
+Never share unredacted production JSON files. Always run the redaction script before uploading logs.
+</Aside>
+
+```markdown
+<Aside type="caution">
+Never share unredacted production JSON files. Always run the redaction script before uploading logs.
+</Aside>
+```
+
+#### 4. Danger
+Use only for critical warnings, breaking changes, or actions that could cause data loss.
+<Aside type="danger">
+Modifying the core schema version without updating the validation rules will break compatibility with all consumers.
+</Aside>
+
+```markdown
+<Aside type="danger">
+Modifying the core schema version without updating the validation rules will break compatibility with all consumers.
+</Aside>
+```
+
+---
+
+## Steps
+
+The `Steps` component is perfect for wrapping ordered lists to make instruction sequences easier to follow.
+
+### Example
+
+<Steps>
+1. **Initialize the Repository**: Fork and clone the documentation repository.
+2. **Create a New Branch**: Use a descriptive branch name (e.g., `git checkout -b style-improvements`).
+3. **Submit the PR**: Open a pull request against the main branch.
+</Steps>
+
+```mdx
+import { Steps } from '@astrojs/starlight/components';
+
+<Steps>
+1. **Initialize the Repository**: Fork and clone the documentation repository.
+2. **Create a New Branch**: Use a descriptive branch name (e.g., `git checkout -b style-improvements`).
+3. **Submit the PR**: Open a pull request against the main branch.
+</Steps>
+```
+
+---
+
+## Tabs & TabItems
+
+Use tabs to group alternative options or platform-specific instructions (such as OS commands, Go vs. Python code, or AWS vs. Azure configurations).
+
+### Example
+
+<Tabs>
+  <TabItem label="Cisco APIC">
+    ```bash
+    osirisjson-producer cisco apic -h 10.0.0.1 -u admin -p secret
+    ```
+  </TabItem>
+  <TabItem label="Cisco NX-OS">
+    ```bash
+    osirisjson-producer cisco nxos -h switch01.example.com -u admin -p secret 
+    ```
+  </TabItem>
+  <TabItem label="Cisco IOS-XE">
+    ```bash
+    osirisjson-producer cisco iosxe -h router01.example.com -u admin --insecure 
+    ```
+  </TabItem>
+</Tabs>
+
+### Code to Copy
+
+````mdx
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Tabs>
+  <TabItem label="Cisco APIC">
+    ```bash
+    osirisjson-producer cisco apic -h 10.0.0.1 -u admin -p secret
+    ```
+  </TabItem>
+  <TabItem label="Cisco NX-OS">
+    ```bash
+    osirisjson-producer cisco nxos -h switch01.example.com -u admin -p secret 
+    ```
+  </TabItem>
+  <TabItem label="Cisco IOS-XE">
+    ```bash
+    osirisjson-producer cisco iosxe -h router01.example.com -u admin --insecure 
+    ```
+  </TabItem>
+</Tabs>
+````
+
+---
+
+## Cards & CardGrids
+
+Cards are ideal for homepage navigation, landing pages, or visually highlighting key concepts. Always wrap multiple cards in a `<CardGrid>` to ensure they lay out responsively.
+
+### Example with or without icon
+
+<CardGrid>
+    <Card title='OSIRIS JSON Producers'>
+    	generate a private portable and normalized snapshot of your IT/OT on-premise, hybrid or cloud infrastructure at a point in time without need of extra dependencies like third-party services or SaaS solutions, AI Platforms and MCP Servers.
+
+    	[Getting started](/osiris-producers/getting-started/)
+    </Card>
+    <Card title='<span class="material-symbols-outlined card-icon" aria-hidden="true">extension</span> Developer guideline'>
+    	build and extend OSIRIS JSON producers.
+
+    	[Read the developer guide](/developer-guidelines/welcome/)
+    </Card>
+</CardGrid>
+
+### Code to Copy
+
+```mdx
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid>
+    <Card title='OSIRIS JSON Producers'>
+    	generate a private portable and normalized snapshot of your IT/OT on-premise, hybrid or cloud infrastructure at a point in time without need of extra dependencies like third-party services or SaaS solutions, AI Platforms and MCP Servers.
+
+    	[Getting started](/osiris-producers/getting-started/)
+    </Card>
+    <Card title='<span class="material-symbols-outlined card-icon" aria-hidden="true">extension</span> Developer guideline'>
+    	build and extend OSIRIS JSON producers.
+
+    	[Read the developer guide](/developer-guidelines/welcome/)
+    </Card> snapshots to detect drift and build topology.
+  </Card>
+</CardGrid>
+```
+
+<Aside type="note">
+You can use the [Google's Material Icons](https://fonts.google.com/icons) by referring the `icon_names` in the `<span>` field
+</Aside>
+
+---
+
+## Badges
+
+Badges are used to display short inline metadata, such as version tags, release status, or compliance levels.
+
+### Example
+
+* <Badge text="Info" variant="note" /> This look as a new feature to try.
+* <Badge text="Success" variant="success" /> Release for AWS is now stable.
+* <Badge text="Tip" variant="tip" /> The validator command is currently under test.
+* <Badge text="Caution" variant="caution" /> The OT producer is currently in Beta.
+* <Badge text="Warning" variant="danger" /> The compliance exporter is Experimental.
+
+### Code to Copy
+
+```mdx
+import { Badge } from '@astrojs/starlight/components';
+
+* <Badge text="Info" variant="note" /> This look as a new feature to try.
+* <Badge text="Success" variant="success" /> Release for AWS is now stable.
+* <Badge text="Tip" variant="tip" /> The validator command is currently under test.
+* <Badge text="Caution" variant="caution" /> The OT producer is currently in Beta.
+* <Badge text="Warning" variant="danger" /> The compliance exporter is Experimental.
+```
+
+---
+
+## Link Cards
+
+Link Cards provide a clear, stylized block link to direct readers to other sections or external websites.
+
+### Example
+
+<LinkCard
+  title="Go Producer SDK Reference"
+  description="Explore the official Go SDK packages and validation rules."
+  href="/developer-guidelines/producers/producer-sdk/"
+/>
+
+### Code to Copy
+
+```mdx
+import { LinkCard } from '@astrojs/starlight/components';
+
+<LinkCard
+  title="Go Producer SDK Reference"
+  description="Explore the official Go SDK packages and validation rules."
+  href="/developer-guidelines/producers/producer-sdk/"
+/>
+```

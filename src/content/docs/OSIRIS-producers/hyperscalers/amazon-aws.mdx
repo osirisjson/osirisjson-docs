@@ -1,0 +1,377 @@
+---
+title: 'OSIRIS JSON Producer for Amazon AWS'
+description: 'OSIRIS JSON producer for Amazon AWS hyperscaler platform. Produce an OSIRIS JSON document from your AWS infrastructure including VPCs and their resources.'
+lastUpdated: 2026-06-21T00:00:00Z
+sidebar:
+  label: 'Amazon AWS'
+  order: 21
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+The OSIRIS JSON AWS producer connects to Amazon Web Services via the AWS Go SDK v2 and generates OSIRIS JSON snapshots document of your account topology: VPCs, subnets, security groups, transit gateways, direct connect, load balancers, EC2 instances and more.
+
+## Prerequisites
+
+<Steps>
+	1. Install the OSIRIS Producer see the [How to Install](/docs/producers/install) page for more install options.
+	2. Configure AWS credentials using one of these methods:
+		- `aws configure --profile <name>` for static credentials
+		- `aws configure sso` for IAM Identity Center (SSO)
+		- `osirisjson-producer aws setup-sso --start-url <URL>` for automated SSO setup
+		- Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
+		- IAM instance profile (when running on EC2)
+	3. The authenticated user must have **ReadOnly access** to one or multiple target accounts. You can execute the producer on your local machine or invoke it using a scheduled job with a service account.
+</Steps>
+
+## CLI usage
+
+```bash
+osirisjson-producer aws [flags]
+osirisjson-producer aws setup-sso --start-url <URL> [--region <region>]
+osirisjson-producer aws template --generate
+```
+
+### SSO setup automates the profile creation
+
+For organizations using AWS IAM Identity Center (formerly AWS SSO) with many accounts, the `setup-sso` subcommand automates profile creation:
+
+```bash
+osirisjson-producer aws setup-sso --start-url https://myorg.awsapps.com/start
+```
+
+This will:
+<Steps>
+	1. Detect the SSO region automatically (or use `--region` to specify it)
+	2. Open a browser for device authorization
+	3. Discover all accounts and roles
+	4. Write profiles to `~/.aws/config` as `<AccountName>_<RoleName>`
+	5. Cache the SSO token for immediate use (no separate `aws sso login` needed)
+</Steps>
+This is particularly useful for enterprises environment with hundreds of AWS accounts where manual profile configuration is impractical.
+
+### Interactive mode
+
+Run without flags to get an interactive profile picker:
+
+```bash
+osirisjson-producer aws
+```
+
+The producer discovers all AWS CLI profiles from `~/.aws/config` and `~/.aws/credentials`, and presents a numbered list. Select using individual numbers (`1,3,5`), ranges (`30-55`), combinations (`1,3,30-55`), or type `all`. Then choose between all default regions (17 regions) or enter specific regions.
+
+### Single mode
+
+Collect one account and region, saved as `amazon-aws-<timestamp>-<name>-<region>.json`:
+
+```bash
+osirisjson-producer aws --profile prod --region us-east-1
+```
+
+### Multi-region mode
+
+Collect all regions for an account. Creates a folder with one file per region:
+
+```bash
+# All 17 default regions
+osirisjson-producer aws --profile prod --all-regions
+
+# Specific regions
+osirisjson-producer aws --profile prod --region us-east-1,eu-west-1
+```
+
+### Batch mode (CSV)
+
+Generate a CSV template:
+
+```bash
+osirisjson-producer aws template --generate
+```
+
+Collect from a CSV file:
+
+```bash
+osirisjson-producer aws -s accounts.csv -o ./output
+```
+
+The CSV template uses these columns:
+
+| Column         | Required | Description                                               |
+| -------------- | -------- | --------------------------------------------------------- |
+| `profile`      | yes      | AWS CLI profile name                                      |
+| `account_id`   |          | AWS account number, 12-digit (resolved from STS if empty) |
+| `account_name` |          | Human-readable label (used as output folder name)         |
+| `regions`      |          | Comma-separated region list (empty = all default regions) |
+| `environment`  |          | Deployment stage: `dv`, `np`, `pr`                        |
+| `notes`        |          | Free-text notes (ignored by producer)                     |
+
+## Output hierarchy
+
+**Single region:** saves to `amazon-aws-<timestamp>-<name>-<region>.json` in the current directory.
+
+**Multi-region (single account):** creates a folder in the current directory:
+
+```text
+amazon-aws-<timestamp>-<name>/
+  us-east-1.json
+  eu-west-1.json
+  ...
+```
+
+**Batch mode with output directory:**
+
+```text
+output/
+  <AccountName>/
+    <timestamp>/
+      us-east-1.json
+      eu-west-1.json
+      ...
+```
+
+Each region produces a self-contained OSIRIS JSON document. Global resources (Route53 hosted zones, Global Accelerators) are merged into the `us-east-1` document.
+
+## Flags reference
+
+| Flag                  | Short | Description                                                       |
+| --------------------- | ----- | ----------------------------------------------------------------- |
+| `--profile`           | `-P`  | AWS CLI profile name                                              |
+| `--region`            | `-R`  | AWS region(s), comma-separated                                    |
+| `--all-regions`       |       | Iterate all 17 default AWS regions                                |
+| `--source`            | `-s`  | CSV file with account targets                                     |
+| `--output`            | `-o`  | Output directory                                                  |
+| `--safe-failure-mode` |       | Secret handling: `fail-closed` (default), `log-and-redact`, `off` |
+| `--help` / `-h`       |       | Display help and exit                                             |
+
+## What it collects
+
+The AWS producer collects all available data by default per the OSIRIS JSON specification - there is no detail level toggle. The following resource types are queried via the AWS SDK v2:
+
+**Core OSIRIS types:**
+
+| AWS Resource                 | OSIRIS Type              | AWS API                       |
+| ---------------------------- | ------------------------ | ----------------------------- |
+| VPC                          | `network.vpc`            | ec2:DescribeVpcs              |
+| Subnet                       | `network.subnet`         | ec2:DescribeSubnets           |
+| Security Group               | `network.security.group` | ec2:DescribeSecurityGroups    |
+| Network Interface (ENI)      | `network.interface`      | ec2:DescribeNetworkInterfaces |
+| Load Balancer (ALB/NLB/GWLB) | `network.loadbalancer`   | elbv2:DescribeLoadBalancers   |
+| Classic Load Balancer        | `network.loadbalancer`   | elb:DescribeLoadBalancers     |
+| Network Firewall             | `network.firewall`       | networkfirewall:ListFirewalls |
+| EC2 Instance                 | `compute.vm`             | ec2:DescribeInstances         |
+
+**Custom types (`osiris.aws.*` namespace):**
+
+| AWS Resource                 | OSIRIS Type                            | AWS API                                      |
+| ---------------------------- | -------------------------------------- | -------------------------------------------- |
+| Route Table                  | `osiris.aws.routetable`                | ec2:DescribeRouteTables                      |
+| Internet Gateway             | `osiris.aws.gateway.internet`          | ec2:DescribeInternetGateways                 |
+| NAT Gateway                  | `osiris.aws.gateway.nat`               | ec2:DescribeNatGateways                      |
+| VPN Gateway                  | `osiris.aws.gateway.vpn`               | ec2:DescribeVpnGateways                      |
+| Customer Gateway             | `osiris.aws.gateway.customer`          | ec2:DescribeCustomerGateways                 |
+| Egress-Only Internet Gateway | `osiris.aws.gateway.egressonly`        | ec2:DescribeEgressOnlyInternetGateways       |
+| Elastic IP                   | `osiris.aws.elasticip`                 | ec2:DescribeAddresses                        |
+| VPC Endpoint                 | `osiris.aws.vpc.endpoint`              | ec2:DescribeVpcEndpoints                     |
+| VPC Peering Connection       | `osiris.aws.vpc.peering`               | ec2:DescribeVpcPeeringConnections            |
+| Transit Gateway              | `osiris.aws.transitgateway`            | ec2:DescribeTransitGateways                  |
+| TGW Attachment               | `osiris.aws.transitgateway.attachment` | ec2:DescribeTransitGatewayAttachments        |
+| TGW Route Table              | `osiris.aws.transitgateway.routetable` | ec2:DescribeTransitGatewayRouteTables        |
+| TGW Peering Attachment       | `osiris.aws.transitgateway.peering`    | ec2:DescribeTransitGatewayPeeringAttachments |
+| Network ACL                  | `osiris.aws.nacl`                      | ec2:DescribeNetworkAcls                      |
+| Direct Connect Connection    | `osiris.aws.directconnect`             | directconnect:DescribeConnections            |
+| Direct Connect Gateway       | `osiris.aws.directconnect.gateway`     | directconnect:DescribeDirectConnectGateways  |
+| Direct Connect VIF           | `osiris.aws.directconnect.vif`         | directconnect:DescribeVirtualInterfaces      |
+| VPN Connection               | `osiris.aws.vpn.connection`            | ec2:DescribeVpnConnections                   |
+| DHCP Options                 | `osiris.aws.dhcpoptions`               | ec2:DescribeDhcpOptions                      |
+| Managed Prefix List          | `osiris.aws.prefixlist`                | ec2:DescribeManagedPrefixLists               |
+| Flow Log                     | `osiris.aws.flowlog`                   | ec2:DescribeFlowLogs                         |
+| Availability Zone            | `osiris.aws.availabilityzone`          | ec2:DescribeAvailabilityZones                |
+| Target Group                 | `osiris.aws.targetgroup`               | elbv2:DescribeTargetGroups                   |
+| Resolver Rule                | `osiris.aws.resolver.rule`             | route53resolver:ListResolverRules            |
+| Resolver Endpoint            | `osiris.aws.resolver.endpoint`         | route53resolver:ListResolverEndpoints        |
+| Route53 Hosted Zone          | `osiris.aws.route53.zone`              | route53:ListHostedZones (global)             |
+| Global Accelerator           | `osiris.aws.globalaccelerator`         | globalaccelerator:ListAccelerators (global)  |
+
+## OSIRIS JSON output structure for AWS
+
+```json
+{
+  "$schema": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+  "version": "1.0.0",
+  "metadata": {
+    "generator": {
+      "name": "osirisjson-producer-aws",
+      "version": "0.1.0"
+    },
+    "scope": {
+      "providers": ["aws"],
+      "accounts": ["123456789012"],
+      "regions": ["us-east-1", "global"]
+    }
+  },
+  "topology": {
+    "resources": [ ... ],
+    "connections": [ ... ],
+    "groups": [ ... ]
+  }
+}
+```
+
+### Resource types
+
+Resource types follow the [OSIRIS JSON v1.0 specification](/docs/spec/v10/07-resourcetypetaxonomy). Core types are used where defined; AWS-specific types use the `osiris.aws.*` namespace.
+
+**Core types:**
+
+- `network.vpc` - Virtual private clouds
+- `network.subnet` - Subnets
+- `network.interface` - Elastic network interfaces
+- `network.security.group` - Security groups
+- `network.loadbalancer` - Load balancers (ALB, NLB, GWLB, Classic)
+- `network.firewall` - Network firewalls
+- `compute.vm` - EC2 instances
+
+**Custom types (`osiris.aws.*`):**
+
+- `osiris.aws.routetable` - Route tables with route entries
+- `osiris.aws.gateway.internet` - Internet gateways
+- `osiris.aws.gateway.nat` - NAT gateways
+- `osiris.aws.gateway.vpn` - VPN gateways
+- `osiris.aws.gateway.customer` - Customer gateways
+- `osiris.aws.gateway.egressonly` - Egress-only internet gateways
+- `osiris.aws.elasticip` - Elastic IP addresses
+- `osiris.aws.vpc.endpoint` - VPC endpoints (gateway and interface)
+- `osiris.aws.vpc.peering` - VPC peering connections
+- `osiris.aws.transitgateway` - Transit gateways
+- `osiris.aws.transitgateway.attachment` - TGW attachments
+- `osiris.aws.transitgateway.routetable` - TGW route tables
+- `osiris.aws.transitgateway.peering` - TGW peering attachments
+- `osiris.aws.nacl` - Network ACLs
+- `osiris.aws.directconnect` - Direct Connect connections
+- `osiris.aws.directconnect.gateway` - Direct Connect gateways
+- `osiris.aws.directconnect.vif` - Direct Connect virtual interfaces
+- `osiris.aws.vpn.connection` - VPN connections
+- `osiris.aws.dhcpoptions` - DHCP option sets
+- `osiris.aws.prefixlist` - Managed prefix lists
+- `osiris.aws.flowlog` - VPC flow logs
+- `osiris.aws.availabilityzone` - Availability zones
+- `osiris.aws.targetgroup` - Target groups
+- `osiris.aws.resolver.rule` - Route53 Resolver rules
+- `osiris.aws.resolver.endpoint` - Route53 Resolver endpoints
+- `osiris.aws.route53.zone` - Route53 hosted zones
+- `osiris.aws.globalaccelerator` - Global Accelerators
+
+### Connection types
+
+- `contains` - Containment (subnet inside VPC)
+- `network` - Network connectivity (ENI-to-subnet, SG-to-ENI, NACL-to-subnet, route table associations, NAT gateway links, IGW/VGW attachments, VPC peerings, TGW attachments, Direct Connect VIF-to-gateway, VPN connections, DHCP-to-VPC, LB-to-target group)
+
+### Group types
+
+- `osiris.aws.account` - Top-level account group, children are VPC groups
+- `network.vpc` - VPC groups containing the VPC's resources as members
+
+### Provider metadata
+
+Every resource includes `provider.type` with the native AWS resource type (e.g. `ec2:vpc`, `ec2:instance`, `elbv2:loadbalancer`). Resources also include `provider.region` and `provider.account`.
+
+### Resource IDs
+
+AWS resource IDs follow the pattern `aws::arn:aws:<service>:<region>:<account>:<resource>`, constructing canonical ARNs. For resources that already have ARNs (e.g. load balancers), the existing ARN is used with the `aws::` prefix.
+
+## Examples
+
+### Single region
+
+Collect a single AWS account and region:
+
+```bash
+osirisjson-producer aws --profile prod --region us-east-1
+```
+
+OSIRIS JSON output document (example):
+
+```json
+{
+	"$schema": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+	"version": "1.0.0",
+	"metadata": {
+		"generator": {
+			"name": "osirisjson-producer-aws",
+			"version": "0.1.0"
+		},
+		"scope": {
+			"providers": ["aws"],
+			"accounts": ["123456789012"],
+			"regions": ["us-east-1", "global"]
+		}
+	},
+	"topology": {
+		"resources": [
+			{
+				"id": "aws::arn:aws:ec2:us-east-1:123456789012:vpc/vpc-045dbb8300ce8bfd3",
+				"type": "network.vpc",
+				"name": "production-vpc",
+				"status": "active",
+				"provider": {
+					"name": "aws",
+					"native_id": "vpc-045dbb8300ce8bfd3",
+					"type": "ec2:vpc",
+					"region": "us-east-1",
+					"account": "123456789012"
+				},
+				"properties": {
+					"cidr_block": "10.0.0.0/16",
+					"is_default": false,
+					"owner_id": "123456789012"
+				}
+			},
+			{
+				"id": "aws::arn:aws:ec2:us-east-1:123456789012:instance/i-0abc123def456",
+				"type": "compute.vm",
+				"name": "web-server-01",
+				"status": "active",
+				"provider": {
+					"name": "aws",
+					"native_id": "i-0abc123def456",
+					"type": "ec2:instance",
+					"region": "us-east-1",
+					"account": "123456789012"
+				},
+				"properties": {
+					"instance_type": "c5.xlarge",
+					"private_ip": "10.0.1.24",
+					"public_ip": "203.0.113.10",
+					"vpc_id": "vpc-123456789012",
+					"subnet_id": "subnet-123456789012"
+				}
+			}
+		],
+		"connections": [
+			{
+				"source": "aws::arn:aws:ec2:us-east-1:123456789012:subnet/subnet-0ed57794b6f7812a5",
+				"target": "aws::arn:aws:ec2:us-east-1:123456789012:vpc/vpc-045dbb8300ce8bfd3",
+				"type": "contains",
+				"direction": "forward"
+			}
+		],
+		"groups": [
+			{
+				"id": "aws::account::123456789012",
+				"type": "osiris.aws.account",
+				"name": "Account 123456789012",
+				"children": ["aws::vpc-group::us-east-1::vpc-123456789012"]
+			},
+			{
+				"id": "aws::vpc-group::us-east-1::vpc-123456789012",
+				"type": "network.vpc",
+				"name": "VPC production-vpc",
+				"members": [
+					"aws::arn:aws:ec2:us-east-1:123456789012:vpc/vpc-123456789012",
+					"aws::arn:aws:ec2:us-east-1:123456789012:subnet/subnet-123456789012"
+				]
+			}
+		]
+	}
+}
+```

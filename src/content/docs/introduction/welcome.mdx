@@ -1,0 +1,86 @@
+---
+title: 'Welcome to OSIRIS JSON'
+description: 'Get started with the OSIRIS JSON documentation. Find the resources, use cases, and guidelines tailored to understand what is OSIRIS JSON and how get the most out of it.'
+lastUpdated: 2026-07-10T09:00:00Z
+sidebar:
+  label: 'Welcome'
+  order: 0
+---
+
+import { CardGrid, Card, Badge, Steps } from '@astrojs/starlight/components';
+
+Welcome to the documentation portal for **OSIRIS JSON**, The Open Specification for Infrastructure Resource Interchange Schema designed to allow you to take snapshots of your infrastructure at a point in time. 
+
+Modern enterprise environments suffer from extreme infrastructure data fragmentation. When managing heterogeneous systems across public clouds, private virtualization, on-premise hardware, and operational technology (OT), organizations often face high tool integration costs, documentation drift, and the risks of tribal knowledge silos. OSIRIS JSON addresses these challenges by offering a lightweight, vendor-neutral schema to normalize and capture the state of your infrastructure at a point in time.
+
+## Navigating the Documentation by Role
+
+To help you get the most out of the OSIRIS JSON ecosystem, we have structured our documentation to align with different professional goals:
+
+<CardGrid>
+  <Card title="For Auditors & Compliance Officers">
+    Understand how OSIRIS JSON provides immutable, UTC-labeled, point-in-time snapshots of infrastructure states.
+    - Read about **[Auditing and Compliance Use Cases](/introduction/use-cases/)**
+    - Learn about **[Built-in Security & Redaction](/osiris-producers/security/)**
+  </Card>
+  
+  <Card title="For Solution & Enterprise Architects">
+    Learn how to leverage normalized topologies to eliminate tribal knowledge, infrastructure guessing, establish a normalized foundation baseline for your infrastructure, and maintain clear end-to-end visibility.
+    - Explore **[Architectural Use Cases](/introduction/use-cases/)**
+    - Browse **[IT Examples](/examples/it-infrastructure/)**
+    - Browse **[OT Examples](/examples/ot-infrastructure/)**
+  </Card>
+
+  <Card title="For Platform & Security Engineers">
+    See how to automate diagramming, track configuration drift, and query system relationships programmatically.
+    - Learn about **[OSIRIS Consumers](/osiris-consumers/getting-started/)**
+    - Read about **[The Validation Pipeline](/validate/validation-levels/)**
+  </Card>
+
+  <Card title="For Software Developers">
+    Find specifications, SDKs, and guidelines to build your own custom OSIRIS JSON producers or write integrations.
+    - Check the **[Developer Guidelines](/developer-guidelines/welcome/)**
+    - Explore the **[Go Producer SDK](/developer-guidelines/producers/producer-sdk/)**
+  </Card>
+</CardGrid>
+
+---
+
+## Documentation Structure
+
+Our documentation is divided into five main sections:
+
+<Steps>
+    1. **Introduction & Core Concepts**: High-level overviews, architectural value propositions, and real-world use cases.
+  2. **Producers & Integration**: Guides on how to execute OSIRIS JSON Producers locally or in CI/CD to capture snapshots from AWS, Azure, Cisco, and more.
+  3. **Consumers & Tooling**: Tools that ingest OSIRIS JSON documents to generate visual topologies, reports, and change drift logs.
+  4. **Validation**: An explanation of the three-level validation pipeline to guarantee metadata and relational integrity.
+  5. **Developer & Contributor Space**: Specifications, guidelines, and SDK details for building on top of the OSIRIS format.
+</Steps>
+
+---
+
+## Get Involved in the Community
+
+OSIRIS is a vendor-neutral, open specification that thrives on collaboration. Whether you want to suggest a new resource schema, report a bug, or write an OSIRIS JSON producer for a specific vendor or platform, you can engage with us directly:
+
+<CardGrid>
+  <Card title="GitHub Discussions">
+    Share ideas, propose schema extensions, and ask questions.
+    [Join the discussion](https://github.com/orgs/osirisjson/discussions)
+  </Card>
+  <Card title="Issue Tracking">
+    Report bugs, submit feature requests, and follow development updates.
+    [Open an issue](https://github.com/osirisjson/osiris/issues)
+  </Card>
+  <Card title="Contributing Guidelines">
+    Learn about our governance model, roles, and how to submit pull requests.
+    [Read the Contributing Guide](/community/contributing/)
+  </Card>
+</CardGrid>
+
+:::tip[Code of Conduct]
+Participation in the OSIRIS JSON community is governed by our Code of Conduct. Please review it to help us maintain a welcoming and inclusive environment.
+[Read the Code of Conduct](https://osirisjson.org/en/commitments/codeofconduct)
+:::
+

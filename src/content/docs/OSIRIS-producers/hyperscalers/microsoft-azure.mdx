@@ -1,0 +1,562 @@
+---
+title: 'OSIRIS JSON Producer for Microsoft Azure'
+description: 'OSIRIS JSON producer for Microsoft Azure hyperscaler platform. Produce an OSIRIS JSON document from your Microsoft Azure tenant including subscriptions and its resources.'
+lastUpdated: 2026-06-07T00:00:00Z
+sidebar:
+  label: 'Microsoft Azure'
+  order: 20
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+The OSIRIS JSON Azure producer connects to Microsoft Azure via the Azure CLI (`az`) and generates OSIRIS JSON snapshots of your subscription topology. As of `v0.5.0` the producer covers networking, compute, storage, identity, databases, containers, integration, observability, backup, automation and management group tiers, including their cross-resource dependency edges (Private Endpoint to PaaS targets, App Service to App Insights, Log Analytics, RSV, Backup Vault to protected items, AKS to subnets and node pools, etc.).
+
+## Prerequisites
+
+<Steps>
+	1. Install the OSIRIS Producer - see the [How to Install](/osiris-producers/installation/) page for more install options. 
+	2. Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) 
+	3. Authenticate: `az login` 
+	4. The authenticated user must have **Reader** role (or equivalent read permission) on the target subscription(s). For full data collection including effective routes, the user also needs `Microsoft.Network/networkInterfaces/effectiveRouteTable/action` permission (included in Network Contributor and above). If this permission is absent, the producer skips effective route collection with an INFO log and continues normally.
+</Steps>
+
+You can execute the producer on your local machine or invoke it using a scheduled job with a service account on your preferred platform.
+
+## CLI usage
+
+```bash
+osirisjson-producer azure [flags]
+osirisjson-producer azure template --generate
+```
+
+### Single mode
+
+Start by collecting one subscription that will be automatically saved as `microsoft-azure-<timestamp>-<name>.json`:
+
+```bash
+# In this example you target a subscription ID you already know
+osirisjson-producer azure -S a1b2c3d4-e5f6-7890-abcd-ef1234567890
+```
+
+### Interactive mode
+
+Run without flags to get an easy interactive subscription picker:
+
+```bash
+osirisjson-producer azure
+```
+
+The producer discovers all accessible subscriptions and presents a numbered list. Select using individual numbers (`1,3,5`), ranges (`30-55`), combinations (`1,3,30-55`), or type `all`.
+
+### Multi-subscription mode
+
+Collect multiple subscriptions to an output directory:
+
+```bash
+# Specific subscriptions
+osirisjson-producer azure -S sub-id-1,sub-id-2,sub-id-3 -o ./output
+
+# All accessible subscriptions (auto-discover)
+osirisjson-producer azure --all -o ./output
+
+# All subscriptions in a specific tenant
+osirisjson-producer azure --all --tenant f1e2d3c4-b5a6-9078-fedc-ba9876543210 -o ./output
+```
+
+### Batch mode (CSV)
+
+Generate a CSV template:
+
+```bash
+osirisjson-producer azure template --generate
+```
+
+Collect from a CSV file:
+
+```bash
+osirisjson-producer azure -s subscriptions.csv -o ./output
+```
+
+The CSV template uses these columns:
+
+| Column              | Required | Description                                                                  |
+| ------------------- | -------- | ---------------------------------------------------------------------------- |
+| `subscription_id`   | yes      | Azure subscription UUID                                                      |
+| `subscription_name` | yes      | Human-readable label (used as output filename)                               |
+| `tenant_id`         |          | Azure AD / Entra ID tenant UUID                                              |
+| `environment`       |          | Deployment stage: `dv`, `np`, `pr` (development, non-production, production) |
+| `region`            |          | Filter to Azure region (empty = all regions)                                 |
+| `notes`             |          | Free-text notes (ignored by producer)                                        |
+
+## Output hierarchy
+
+**Single mode:** saves to `microsoft-azure-<timestamp>-<name>.json` in the current directory.
+
+**Multi/batch/all modes:** organized by tenant and timestamp:
+
+```text
+output/
+  <TenantID>/
+    <timestamp>/
+      <SubscriptionName>.json
+```
+
+Each subscription produces a self-contained OSIRIS JSON document. Cross-subscription references (e.g. VNet peerings or ExpressRoute connections to remote subscriptions) are emitted as stub resources with `provider.subscription` set to the remote subscription ID, so the topology edge survives the boundary while the document remains valid.
+
+### Multi-tenant environments
+
+Run the producer once per tenant. Each `az login` authenticates to one tenant. Use `az login --tenant <tenant-id>` to switch. The output hierarchy groups documents by tenant automatically.
+
+## Flags reference
+
+| Flag                  | Short | Description                                                                              |
+| --------------------- | ----- | ---------------------------------------------------------------------------------------- |
+| `--subscription`      | `-S`  | Azure subscription ID(s), comma-separated                                                |
+| `--all`               |       | Auto-discover all accessible subscriptions                                               |
+| `--source`            | `-s`  | CSV file with subscription targets                                                       |
+| `--output`            | `-o`  | Output directory (required for multi/all/CSV mode)                                       |
+| `--tenant`            |       | Azure AD / Entra ID tenant ID (optional)                                                 |
+| `--region`            |       | Filter to a specific Azure region (optional)                                             |
+| `--purpose`           |       | Output detail grade: `documentation` (default) or `audit`. See [Purpose](#purpose) below |
+| `--safe-failure-mode` |       | Secret handling: `fail-closed` (default), `log-and-redact`, `off`                        |
+| `--version` / `-v`    |       | Display version and exit                                                                 |
+| `--help`              |       | Display help and exit                                                                    |
+
+## Purpose
+
+The `--purpose` flag implements [OSIRIS JSON specification chapter 13.1.3 (data minimization)](http://osirisjson.org/en/specification#1313-data-minimization). Collection is always exhaustive; emission is shaped by the declared purpose so the same producer run can serve both lightweight visualization use cases and audit / compliance use cases.
+
+| Value                     | Behavior                                                                                                                                                                                                                                                |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `documentation` (default) | Minimal fields: identity, type, provider traceability, names, tags and high-level relationships. Per-resource `properties` and `extensions` maps are stripped. Suited for diagrams, inventory dashboards and high-level documentation.                  |
+| `audit`                   | Every readable field, after sensitive-field redaction. Full `properties` and `extensions` maps for every resource, connection and group. Suited for compliance reviews, audits, configuration drift or deep documentation and accurate topology design. |
+
+The selected value is recorded in the document under `metadata.scope.purpose` so consumers can tell which grade of detail they are reading.
+
+:::caution
+Secrets are always redacted regardless of purpose. The audit projection adds detail (IP addresses, NSG rules, SKU subfields, BGP details, etc.); it never adds authentication material. Database admin passwords, Cosmos / Redis / Service Bus / Event Hubs access keys, App Insights instrumentation keys and Log Analytics shared keys are never collected.
+:::
+
+```bash
+# Default: documentation (minimal projection)
+osirisjson-producer azure -S a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+# Audit: full ARM fidelity
+osirisjson-producer azure -S a1b2c3d4-e5f6-7890-abcd-ef1234567890 --purpose audit
+```
+
+## What OSIRIS JSON producer for Microsoft Azure collects
+
+The OSIRIS JSON producer for Microsoft Azure collects a complete inventory of supported resource types via the Azure CLI on every run. The following tables group what is queried.
+
+### Networking
+
+| Microsoft Azure resource           | OSIRIS JSON type                     |
+| ---------------------------------- | ------------------------------------ |
+| Virtual Networks                   | `network.vpc`                        |
+| Subnets                            | `network.subnet`                     |
+| Network Interfaces                 | `network.interface`                  |
+| Network Security Groups            | `network.security.group`             |
+| Application Security Groups        | `osiris.azure.asg`                   |
+| Route Tables                       | `osiris.azure.routetable`            |
+| Public IP Addresses                | `osiris.azure.publicip`              |
+| Public IP Prefixes                 | `osiris.azure.publicipprefix`        |
+| Load Balancers (L4)                | `network.loadbalancer`               |
+| Application Gateways (L7)          | `osiris.azure.applicationgateway`    |
+| Azure Firewalls                    | `network.firewall`                   |
+| NAT Gateways                       | `osiris.azure.gateway.nat`           |
+| VNet Gateways (VPN / ExpressRoute) | `osiris.azure.gateway.vnet`          |
+| Route Servers                      | `osiris.azure.routeserver`           |
+| ExpressRoute Circuits              | `osiris.azure.expressroute`          |
+| VPN Gateway Connections            | `osiris.azure.vpnconnection`         |
+| Private Endpoints                  | `osiris.azure.privateendpoint`       |
+| DNS Zones                          | `osiris.azure.dns.zone`              |
+| Private DNS Zones                  | `osiris.azure.dns.privatezone`       |
+| DNS Private Resolvers              | `osiris.azure.dns.resolver`          |
+| DNS Forwarding Rulesets            | `osiris.azure.dns.forwardingruleset` |
+| Azure Bastion                      | `osiris.azure.bastion`               |
+| Traffic Manager Profiles           | `osiris.azure.trafficmanager`        |
+| Availability Sets                  | `osiris.azure.availabilityset`       |
+
+### Compute
+
+| Microsoft Azure resource | OSIRIS JSON type           |
+| ------------------------ | -------------------------- |
+| Virtual Machines         | `compute.vm`               |
+| VM Scale Sets            | `osiris.azure.vmss`        |
+| Managed Disks            | `osiris.azure.disk`        |
+| Managed Snapshots        | `osiris.azure.snapshot`    |
+| Azure Arc Machines       | `osiris.azure.arc.machine` |
+
+### Storage
+
+| Microsoft Azure resource | OSIRIS JSON type       |
+| ------------------------ | ---------------------- |
+| Storage Accounts         | `osiris.azure.storage` |
+
+### App Service / web tier
+
+| Microsoft Azure resource | OSIRIS JSON type              |
+| ------------------------ | ----------------------------- |
+| App Service Plan         | `osiris.azure.appserviceplan` |
+| Web App                  | `osiris.azure.webapp`         |
+| Web App Deployment Slot  | `osiris.azure.webapp.slot`    |
+| Function App             | `osiris.azure.functionapp`    |
+
+App Service routing: sites whose `kind` contains `functionapp` are emitted as `osiris.azure.functionapp`; all other sites are emitted as `osiris.azure.webapp`.
+
+### Identity and security
+
+| Microsoft Azure resource       | OSIRIS JSON type                 |
+| ------------------------------ | -------------------------------- |
+| Key Vault                      | `osiris.azure.keyvault`          |
+| Container Registry             | `osiris.azure.containerregistry` |
+| User-Assigned Managed Identity | `osiris.azure.managedidentity`   |
+
+### Backup and disaster recovery
+
+| Microsoft Azure resource    | OSIRIS JSON type                     |
+| --------------------------- | ------------------------------------ |
+| Recovery Services Vault     | `osiris.azure.recoveryservicesvault` |
+| Backup Vault (Azure Backup) | `osiris.azure.backupvault`           |
+
+### Databases
+
+| Microsoft Azure resource   | OSIRIS JSON type                |
+| -------------------------- | ------------------------------- |
+| SQL Server                 | `osiris.azure.sqlserver`        |
+| SQL Database               | `osiris.azure.sqldatabase`      |
+| SQL Elastic Pool           | `osiris.azure.sql.elasticpool`  |
+| SQL Managed Instance       | `osiris.azure.sqlmi`            |
+| SQL MI Database            | `osiris.azure.sqlmidatabase`    |
+| SQL Virtual Machine        | `osiris.azure.sqlvm`            |
+| PostgreSQL Flexible Server | `osiris.azure.postgresqlserver` |
+| MySQL Flexible Server      | `osiris.azure.mysqlserver`      |
+| Cosmos DB account          | `osiris.azure.cosmosaccount`    |
+| Redis Cache                | `osiris.azure.redis`            |
+
+### Containers
+
+| Microsoft Azure resource          | OSIRIS JSON type                        |
+| --------------------------------- | --------------------------------------- |
+| AKS Cluster                       | `osiris.azure.aks.cluster`              |
+| AKS Agent Pool                    | `osiris.azure.aks.nodepool`             |
+| Container App Managed Environment | `osiris.azure.containerapp.environment` |
+| Container App                     | `osiris.azure.containerapp`             |
+| Container Group / ACI             | `osiris.azure.containergroup`           |
+
+### Integration and messaging
+
+| Microsoft Azure resource        | OSIRIS JSON type                     |
+| ------------------------------- | ------------------------------------ |
+| Service Bus Namespace           | `osiris.azure.servicebus.namespace`  |
+| Event Hubs Namespace            | `osiris.azure.eventhubs.namespace`   |
+| API Management Service          | `osiris.azure.apim`                  |
+| Front Door (Standard / Premium) | `osiris.azure.frontdoor.profile`     |
+| Stream Analytics                | `osiris.azure.streamanalytics`       |
+| Event Grid System Topic         | `osiris.azure.eventgrid.systemtopic` |
+
+### Automation and workflows
+
+| Microsoft Azure resource    | OSIRIS JSON type                    |
+| --------------------------- | ----------------------------------- |
+| Logic Workflow              | `osiris.azure.logic.workflow`       |
+| Logic API Connection        | `osiris.azure.logic.apiconnection`  |
+| Data Factory                | `osiris.azure.datafactory`          |
+| Synapse Workspace           | `osiris.azure.synapse.workspace`    |
+| Automation Account          | `osiris.azure.automation.account`   |
+| Communication Service       | `osiris.azure.communicationservice` |
+| Email Communication Service | `osiris.azure.emailservice`         |
+| Email Communication Domain  | `osiris.azure.emailservice.domain`  |
+
+### Observability
+
+| Microsoft Azure resource | OSIRIS JSON type                              | Note                   |
+| ------------------------ | --------------------------------------------- | ---------------------- |
+| Application Insights     | `osiris.azure.applicationinsights`            |                        |
+| Log Analytics Workspace  | `osiris.azure.loganalytics`                   |                        |
+| Data Collection Rule     | `osiris.azure.monitor.datacollectionrule`     |                        |
+| Data Collection Endpoint | `osiris.azure.monitor.datacollectionendpoint` |                        |
+| Autoscale Setting        | `osiris.azure.monitor.autoscale`              |                        |
+| Metric Alert             | `osiris.azure.monitor.metricalert`            | `--purpose audit` only |
+| Action Group             | `osiris.azure.monitor.actiongroup`            | `--purpose audit` only |
+
+Metric Alert and Action Group resources are gated to `--purpose audit` because they are observability policy constructs, not topology resources; under the default `documentation` purpose they are not emitted.
+
+### Containment
+
+| Microsoft Azure resource | OSIRIS JSON type          |
+| ------------------------ | ------------------------- |
+| Resource Groups          | `container.resourcegroup` |
+
+#### What is intentionally not collected
+
+OSIRIS JSON **defines a vendor-neutral JSON format for describing infrastructure resources, their properties and their topological relationships** - it is not an Infrastructure-as-Code or similar format. You can read more here [What is OSIRIS JSON](/introduction/what-is-osiris/). The following are intentionally **out of scope**:
+
+- Backup / retention policies under Recovery Services Vault and Backup Vault (the vaults and protected-item edges are emitted; the policy bodies are not).
+- Database-tier policy: SQL auditing, threat-detection, TDE, firewall rules, security-alert-policy.
+- API Management policies, products, operations, named values.
+- Front Door routes, rule sets, endpoints, WAF policy associations (the profile is emitted; the routing is not).
+- Container App secrets and ACI environment variables.
+- Per-resource diagnostic-setting enumeration (would add one `az` call per resource).
+- Classic Azure Front Door (`Microsoft.Network/frontDoors`, deprecated).
+- Legacy `Microsoft.DBforPostgreSQL/servers` (single server, end-of-life on Azure's roadmap).
+
+## OSIRIS JSON output structure for Microsoft Azure
+
+```json
+{
+  "$schema": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+  "version": "1.0.0",
+  "metadata": {
+    "generator": {
+      "name": "osirisjson-producer-azure",
+      "version": "0.5.0",
+      "url": "https://osirisjson.org/en/docs/producers/hyperscalers/microsoft-azure"
+    },
+    "scope": {
+      "name": "<subscription-id> - <subscription-name>",
+      "purpose": "documentation",
+      "providers": ["azure"],
+      "accounts": ["<tenant-id>"],
+      "subscriptions": ["<subscription-id>"],
+      "regions": ["westeurope", "eastus2"]
+    }
+  },
+  "topology": {
+    "resources": [ ... ],
+    "connections": [ ... ],
+    "groups": [ ... ]
+  }
+}
+```
+
+### Connection types
+
+Connection edges use OSIRIS JSON v1.0 predefined subtypes per [specification chapter 5.2.3](http://osirisjson.org/en/specification#523-standard-connection-types-v10) so consumers can tell topology layers apart.
+
+| OSIRIS JSON connection type | Used for                                                                                                                                                                                                                                  |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `contains`                  | Containment (Subnet within VNet, App Service Plan within site, AKS Cluster within node pool, RG within Subscription, SQL Server within SQL Database, SQL MI within SQL MI Database, source Disk within Snapshot, VM within attached Disk) |
+| `network`                   | Generic network connectivity (NIC to subnet, NSG associations, DNS links, gateway connections, App Insights to workspace, Web App to App Insights, AKS / Redis / ACI to subnet, APIM to subnet)                                           |
+| `network.peering`           | VNet peerings                                                                                                                                                                                                                             |
+| `network.vpn`               | VPN gateway connections                                                                                                                                                                                                                   |
+| `network.bgp`               | ExpressRoute circuit connections                                                                                                                                                                                                          |
+| `dependency`                | Private Endpoint to PaaS target (Web App, Function App, Key Vault, Container Registry, Recovery Services Vault, AKS cluster, Service Bus, Event Hubs, APIM)                                                                               |
+| `dependency.storage`        | Private Endpoint to Storage Account                                                                                                                                                                                                       |
+| `dependency.database`       | Private Endpoint to database (SQL Server, Cosmos DB, Redis)                                                                                                                                                                               |
+
+### Group types
+
+| OSIRIS JSON group type    | Used for                                                                                                                                                                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `logical.subscription`    | Top-level subscription group. Under `--purpose audit` gains `extensions.osiris.azure.management_group_path` (JSON array of display names, root to leaf).                                                                                                                  |
+| `logical.resourcegroup`   | Resource group groups (children of the subscription)                                                                                                                                                                                                                      |
+| `logical.managementgroup` | One group per management group in the tenant ancestry chain (root to the subscription's parent). Each group lists its direct child subscriptions and child management groups as `children`.                                                                               |
+| `container.region`        | One group per distinct `provider.region` observed in the subscription, membering every resource in that region. Region `global` and empty-region resources are skipped. The boundary token is `<subscription-id>/<region>`, so groups never collide across subscriptions. |
+
+### Resource types
+
+Resource types follow the [OSIRIS JSON v1.0 specification](http://osirisjson.org/en/specification#7-resource-type-taxonomy). Core types are used where defined; Azure-specific types use the `osiris.azure.*` namespace.
+
+**Core types:**
+
+- `container.resourcegroup` - Resource groups
+- `network.vpc` - Virtual networks
+- `network.subnet` - Subnets
+- `network.interface` - Network interfaces
+- `network.security.group` - Network security groups
+- `network.loadbalancer` - Load balancers (L4 only; Application Gateways use `osiris.azure.applicationgateway`)
+- `network.firewall` - Azure Firewalls
+- `compute.vm` - Virtual machines
+
+### Extensions (osiris.azure)
+
+Azure-specific data that does not map to portable OSIRIS JSON properties is emitted under the `osiris.azure` extension namespace. This follows the OSIRIS JSON spec: `properties` holds common / portable data, `extensions` holds vendor-specific deep data. Extensions are only emitted under `--purpose audit`.
+
+Representative extensions include:
+
+| OSIRIS JSON resource type                                                                                                                                                            | Selected extension fields                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `network.interface`                                                                                                                                                                  | `enable_accelerated_networking`, `effective_routes[]`                                                              |
+| `network.security.group`                                                                                                                                                             | `default_security_rules[]`                                                                                         |
+| `osiris.azure.expressroute`                                                                                                                                                          | `sku`, `sku_tier`, `service_provider`, `peerings[]` (BGP peering type, state, peer ASN, VLAN ID, address prefixes) |
+| `osiris.azure.webapp` / `osiris.azure.functionapp`                                                                                                                                   | `managed_identity`, `outbound_vnet_routing`, `private_endpoint_connection_ids[]`, `app_insights_id`                |
+| `osiris.azure.storage` / `osiris.azure.keyvault` / `osiris.azure.containerregistry` / `osiris.azure.recoveryservicesvault` / `osiris.azure.sqlserver` / `osiris.azure.cosmosaccount` | `private_endpoint_connection_ids[]`                                                                                |
+| `osiris.azure.applicationinsights`                                                                                                                                                   | `workspace_resource_id` (bound Log Analytics workspace)                                                            |
+| `osiris.azure.loganalytics`                                                                                                                                                          | `customer_id` (workspace UUID used by KQL; not a secret)                                                           |
+| `logical.subscription`                                                                                                                                                               | `osiris.azure.management_group_path` (array of MG display names, root to leaf; audit only)                         |
+
+:::note
+`network.security.group` `security_rules[]` (user-defined rules) are emitted in `properties`, not `extensions`, since they are a primary topology signal. Only `default_security_rules[]` (Azure-managed baseline rules) go to `extensions`.
+:::
+
+> `network.interface` `private_ip` is also emitted in `properties` for the same reason.
+
+### Provider metadata
+
+Every resource includes `provider.type` with the native ARM resource type (e.g. `Microsoft.Network/virtualNetworks`, `Microsoft.Compute/virtualMachines`). Cross-subscription stubs include `provider.subscription` with the remote subscription ID. All resources include `provider.source` set to `azure-cli`.
+
+### Resource IDs
+
+Azure resource IDs follow the pattern `azure::<ARM-resource-id>`, using the full ARM resource ID as the native identifier. This ensures globally unique, deterministic IDs that survive cross-subscription correlation.
+
+### Region canonicalization
+
+`provider.region` and `metadata.scope.regions` are canonicalized to Azure's slug form (lowercase, no spaces). The `az` CLI returns `location` inconsistently across resource types: most ARM resources use `westeurope` / `eastus2`, while App Service Plans and Web Apps surface the display form (`West Europe`). The producer normalizes to the slug so a single-region subscription does not appear as two regions in `metadata.scope.regions`.
+
+### RBAC requirements
+
+| Permission level                      | What gets collected                                                                                                                                                                                                                                |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reader                                | All resource types, properties, extensions (NSG rules, ER peerings, gateway connections, VNet peerings, DNS links, Private Endpoint to target edges, App Service to App Insights, AKS, container, database, messaging and observability resources) |
+| Reader + `effectiveRouteTable/action` | Everything above + NIC effective routes                                                                                                                                                                                                            |
+| Network Contributor / Owner           | Full dataset without restrictions                                                                                                                                                                                                                  |
+
+The producer tests permission on the first NIC and gracefully skips effective route collection if the permission is denied. All other data is collected regardless.
+
+## Examples
+
+### Single subscription
+
+We are going to explore a single subscription in our tenant and generate from Microsoft Azure an OSIRIS JSON document.
+
+```bash
+osirisjson-producer azure -S a1b2c3d4-e5f6-7890-abcd-ef1234567890 --purpose audit
+```
+
+OSIRIS JSON output document (example):
+
+```json
+{
+	"$schema": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+	"version": "1.0.0",
+	"metadata": {
+		"generator": {
+			"name": "osirisjson-producer-azure",
+			"version": "0.5.0",
+			"url": "https://osirisjson.org/en/docs/producers/hyperscalers/microsoft-azure"
+		},
+		"scope": {
+			"name": "a1b2c3d4-e5f6-7890-abcd-ef1234567890 - my-nonprod-subscription",
+			"purpose": "audit",
+			"providers": ["azure"],
+			"accounts": ["f1e2d3c4-b5a6-9078-fedc-ba9876543210"],
+			"subscriptions": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+			"regions": ["westeurope"]
+		}
+	},
+	"topology": {
+		"resources": [
+			{
+				"id": "azure::/subscriptions/a1b2c3d4/resourceGroups/network-rg/providers/Microsoft.Network/virtualNetworks/hub-vnet",
+				"type": "network.vpc",
+				"name": "hub-vnet",
+				"status": "active",
+				"provider": {
+					"name": "azure",
+					"native_id": "/subscriptions/a1b2c3d4/resourceGroups/network-rg/providers/Microsoft.Network/virtualNetworks/hub-vnet",
+					"type": "Microsoft.Network/virtualNetworks",
+					"region": "westeurope",
+					"source": "azure-cli",
+					"subscription": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+					"tenant": "f1e2d3c4-b5a6-9078-fedc-ba9876543210"
+				},
+				"properties": {
+					"resource_group": "network-rg",
+					"address_space": ["10.0.0.0/16"],
+					"dns_servers": ["10.0.0.4"],
+					"subnet_count": 4,
+					"enable_ddos_protection": false,
+					"peerings": [
+						{
+							"name": "hub-to-spoke",
+							"peering_state": "Connected",
+							"remote_vnet_id": "/subscriptions/a1b2c3d4/.../spoke-vnet",
+							"allow_gateway_transit": true,
+							"allow_forwarded_traffic": true
+						}
+					]
+				}
+			},
+			{
+				"id": "azure::/subscriptions/a1b2c3d4/resourceGroups/data-rg/providers/Microsoft.Storage/storageAccounts/mystg",
+				"type": "osiris.azure.storage",
+				"name": "mystg",
+				"status": "active",
+				"provider": {
+					"name": "azure",
+					"native_id": "/subscriptions/a1b2c3d4/resourceGroups/data-rg/providers/Microsoft.Storage/storageAccounts/mystg",
+					"type": "Microsoft.Storage/storageAccounts",
+					"region": "westeurope",
+					"source": "azure-cli",
+					"subscription": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+					"tenant": "f1e2d3c4-b5a6-9078-fedc-ba9876543210"
+				},
+				"properties": {
+					"resource_group": "data-rg",
+					"sku_tier": "Standard",
+					"sku_name": "Standard_LRS",
+					"kind": "StorageV2",
+					"access_tier": "Hot",
+					"https_only": true,
+					"min_tls_version": "TLS1_2",
+					"public_network_access": "Disabled",
+					"allow_blob_public_access": false
+				},
+				"extensions": {
+					"osiris.azure": {
+						"private_endpoint_connection_ids": [
+							"/subscriptions/a1b2c3d4/.../privateEndpoints/pe-mystg"
+						]
+					}
+				}
+			}
+		],
+		"connections": [
+			{
+				"source": "azure::/subscriptions/a1b2c3d4/.../subnets/default",
+				"target": "azure::/subscriptions/a1b2c3d4/.../virtualNetworks/hub-vnet",
+				"type": "contains",
+				"direction": "forward"
+			},
+			{
+				"source": "azure::/subscriptions/a1b2c3d4/.../privateEndpoints/pe-mystg",
+				"target": "azure::/subscriptions/a1b2c3d4/.../storageAccounts/mystg",
+				"type": "dependency.storage",
+				"direction": "forward"
+			}
+		],
+		"groups": [
+			{
+				"id": "azure::subscription::a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+				"type": "logical.subscription",
+				"name": "my-nonprod-subscription",
+				"children": ["azure::resourcegroup::network-rg", "azure::resourcegroup::data-rg"],
+				"extensions": {
+					"osiris.azure": {
+						"management_group_path": ["Tenant Root Group", "Corp", "NonProd"]
+					}
+				}
+			},
+			{
+				"id": "azure::managementgroup::NonProd",
+				"type": "logical.managementgroup",
+				"name": "NonProd",
+				"children": ["azure::subscription::a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
+			},
+			{
+				"id": "azure::region::a1b2c3d4-e5f6-7890-abcd-ef1234567890/westeurope",
+				"type": "container.region",
+				"name": "westeurope",
+				"members": [
+					"azure::/subscriptions/a1b2c3d4/.../virtualNetworks/hub-vnet",
+					"azure::/subscriptions/a1b2c3d4/.../storageAccounts/mystg"
+				]
+			}
+		]
+	}
+}
+```
+
+The same run with the default `--purpose documentation` returns the identical resource graph, but with the `properties` and `extensions` maps stripped from each resource, connection and group, suiting it for high-level topology views and documentation.

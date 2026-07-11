@@ -1,0 +1,107 @@
+---
+title: 'OSIRIS JSON Toolbox CLI'
+description: 'Reference guide for the OSIRIS JSON Toolbox CLI. Learn about validation flags, exit codes, and CI/CD integration.'
+lastUpdated: 2026-05-20T09:00:00Z
+sidebar:
+  label: 'Toolbox CLI'
+  order: 0
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The **OSIRIS JSON Toolbox CLI** (`@osirisjson/cli`) provides a command-line interface to validate OSIRIS JSON snapshots. It is built to run both on local developer workstations and inside automated CI/CD pipelines.
+
+---
+
+## Installation
+
+The CLI is distributed as an NPM package. You can run it directly using `npx` or install it globally:
+
+<Tabs>
+  <TabItem label="Run Ad-hoc (npx)">
+    ```bash
+    npx @osirisjson/cli validate snapshot.json
+    ```
+  </TabItem>
+  <TabItem label="Global Installation">
+    ```bash
+    npm install -g @osirisjson/cli
+    osirisjson-cli validate snapshot.json
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Commands & Usage
+
+### validate
+
+Validates a snapshot file against the core schema and semantic validation rules.
+
+```bash
+npx @osirisjson/cli validate <file_path> [flags]
+```
+
+#### Command Flags
+
+| Flag | Description | Values | Default |
+|---|---|---|---|
+| `--profile` | Validation profile to run. Strict profile converts Level 3 warnings to errors. | `default`, `strict` | `default` |
+| `--format` | Output format of diagnostics. | `text`, `json` | `text` |
+| `--offline` | Disallow resolving remote schemas; validate against cached local schema only. |   | (enabled) |
+| `--help`, `-h` | Display usage instructions. |   |   |
+
+---
+
+## Exit Codes
+
+The CLI uses stable exit codes to indicate validation status:
+
+| Exit Code | Meaning | Action Needed |
+|---|---|---|
+| `0` | Success: Validation passed with zero errors. | None. Document is compliant. |
+| `1` | Validation Error: Level 1 or Level 2 rules failed (or Level 3 under `--profile strict`). | Address the reported squiggles/errors in the JSON. |
+| `2` | Environment Error: File not found, invalid flag, or JSON syntax error. | Verify file path and CLI execution parameters. |
+
+---
+
+## CI/CD Integration Examples
+
+Integrating OSIRIS validation into your build and release pipeline ensures that all committed topology snapshots conform to the specification before they are consumed by downstream visualization or auditing systems.
+
+### GitHub Actions Workflow
+
+Create a file at `.github/workflows/validate-osiris.yml`:
+
+```yaml
+name: Validate OSIRIS JSON Snapshots
+
+on:
+  push:
+    paths:
+      - 'snapshots/**/*.json'
+  pull_request:
+    paths:
+      - 'snapshots/**/*.json'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate Snapshots
+        run: |
+          # Loop through all JSON files in the snapshots directory
+          for file in snapshots/**/*.json; do
+            echo "Validating $file..."
+            npx @osirisjson/cli validate "$file" --profile strict
+          done
+```

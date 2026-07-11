@@ -1,0 +1,46 @@
+---
+title: 'OSIRIS JSON Developer section'
+description: 'Welcome to the OSIRIS JSON Developer section. Learn how to build producers, consumers, and validation tools for the open infrastructure interchange specification.'
+lastUpdated: 2026-06-10T09:00:00Z
+sidebar:
+  label: 'Welcome'
+  order: 0
+---
+
+import { CardGrid, Card } from '@astrojs/starlight/components';
+
+This developer guide is designed for engineers building or editing OSIRIS JSON Producers, OSIRIS JSON Consumers, or creating custom validations tool within the OSIRIS JSON ecosystem. 
+
+OSIRIS is a vendor-neutral, open specification for infrastructure resource interchange. By normalizing on a common, local-first data format, we enable seamless infrastructure analysis, diagramming, and policy auditing without locking data into proprietary languages and platforms.
+
+---
+
+## Core Principles for Developers
+
+Every tool built for the OSIRIS JSON ecosystem adhere to these fundamental principles:
+
+<CardGrid>
+  <Card title="1. Local-First & Private">
+    Producers and consumers must run locally on workstation or server systems under the user's complete control. Never require external internet connectivity (in case of targeting locally available resources) and never have to transmit data to any third-party services this include AI integrations. Users, without being forced at any step into any model or choice typical of vendor lock-in platform and tools, after generating the OSIRIS JSON document are free to share, store, and process the document wherever they want.
+  </Card>
+  <Card title="2. Secure by Default">
+    Redact all secrets, API tokens, and credentials at the source before emitting OSIRIS JSON snapshots. The output should be safe to store in version control and share with third-parties.
+  </Card>
+  <Card title="3. Explicit & Decoupled">
+    Model infrastructure dependencies explicitly. Decouple data discovery (handled by Producers) from data utilization (handled by Consumers or AI analysis engines).
+  </Card>
+  <Card title="4. Forward-Compatible">
+    Strictly follow Semantic Versioning. Treat unrecognized properties and custom extensions as opaque objects that can be parsed and passed along without throwing validation errors.
+  </Card>
+</CardGrid>
+
+---
+
+## Guide Directory
+
+To help you get started, we have structured the developer guidelines into several key areas:
+
+- **[Specification Architecture](/developer-guidelines/architecture/)**: Understand the design philosophy, document structure, and the relationship between resources, connections, and groups.
+- **[Building Producers](/developer-guidelines/producers/producer-guidelines/)**: Technical details on using the Go SDK, constructing valid resource types, and mapping native infrastructure schemas.
+- **[Style Guidelines](/community/style-guidelines/contributions/)**: Formatting conventions, naming rules, and testing criteria for JSON examples and schema files.
+- **[Core Schema Reference](http://osirisjson.org/schema/v1.0/osiris.schema.json)**: Detailed field-by-field definitions of the OSIRIS envelope, metadata scope, and topology elements.

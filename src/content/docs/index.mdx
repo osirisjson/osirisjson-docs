@@ -1,0 +1,72 @@
+---
+title: The OSIRIS JSON Documentation
+description: 'Explore the guides and tutorials to start getting your infrastructure data into a normalized portable OSIRIS JSON format.'
+hero:
+  title: 'The OSIRIS JSON Documentation'
+  tagline: Explore the guides and tutorials to start getting your infrastructure data into a normalized portable OSIRIS JSON format.
+  image:
+    alt: The OSIRIS JSON
+    file: ../../assets/hero/home/osirisjson-icon.svg  
+  actions:
+    - text: Tell me more
+      link: /introduction/welcome/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/osirisjson/
+      icon: external
+      variant: minimal
+      attrs:
+        rel: me
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Latest news
+
+<Card title='<span class="material-symbols-outlined card-icon" aria-hidden="true">whatshot</span> OSIRIS JSON for AWS is available'>
+	OSIRIS JSON producer for Amazon AWS hyperscaler platform. Produce an OSIRIS JSON document from your AWS infrastructure including VPCs and their resources.
+
+    [Read more](/osiris-producers/hyperscalers/amazon-aws/)
+
+</Card>
+
+## Next steps
+
+<CardGrid>
+	<Card title='OSIRIS JSON Consumers'>
+		read and process OSIRIS JSON documents generating or updating draw.io infrastructure topologies along with a report of your infrastructure and the possibility to make a diff showing configuration drift occurred during time comparing documents.
+
+        [Leave your details and we'll notify you](https://osirisjson.org/en#consumerslaunch)
+    </Card>
+    <Card title='OSIRIS JSON Producers'>
+    	generate a private portable and normalized snapshot of your IT/OT on-premise, hybrid or cloud infrastructure at a point in time without need of extra dependencies like third-party services or SaaS solutions, AI Platforms and MCP Servers.
+
+    	[Getting started](/osiris-producers/getting-started/)
+    </Card>
+    <Card title='<span class="material-symbols-outlined card-icon" aria-hidden="true">extension</span> Developer guideline'>
+    	build and extend OSIRIS JSON producers.
+
+    	[Read the developer guide](/developer-guidelines/welcome/)
+    </Card>
+    <Card title='<span class="material-symbols-outlined card-icon" aria-hidden="true">description</span> The OSIRIS Specification'>
+    	the canonical OSIRIS JSON core schema reference.
+
+    	[Browse the specification](https://osirisjson.org/en/specification)
+    </Card>
+    <Card title='<span class="material-symbols-outlined card-icon" aria-hidden="true">menu_book</span> Examples'>
+    	sample OSIRIS JSON documents for Hyperscalers, Hybrid and IT and OT infrastructure.
+
+    	[See examples](/examples/it-infrastructure/)
+    </Card>
+    <Card title='<span class="material-symbols-outlined card-icon" aria-hidden="true">check_circle</span> Validate'>
+    	Validation levels and the OSIRIS JSON toolbox CLI.
+
+    	[Learn about validation](/validate/validation-levels/)
+    </Card>
+    <Card title='<span class="material-symbols-outlined card-icon" aria-hidden="true">forum</span> Community'>
+    	Contribute to OSIRIS JSON and get support.
+
+    	[Get involved](/community/contributing/)
+    </Card>
+
+</CardGrid>

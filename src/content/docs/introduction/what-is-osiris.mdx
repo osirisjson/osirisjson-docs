@@ -1,0 +1,210 @@
+---
+title: 'What is OSIRIS JSON'
+description: 'OSIRIS is a vendor-neutral JSON interchange schema for describing infrastructure resources and topology across IT and OT environments.'
+lastUpdated: 2026-03-07T16:22:00Z
+sidebar:
+  label: 'What is OSIRIS JSON'
+  order: 4
+---
+
+import { CardGrid, Card, Badge, Aside, LinkCard } from '@astrojs/starlight/components';
+
+<Card title="Overview">
+OSIRIS (Open Specification for Infrastructure Resource Interchange Schema) **defines a vendor-neutral JSON format** for describing infrastructure resources, their properties and their topological relationships across heterogeneous environments with an extension path for OT where applicable.
+
+As an **interchange schema**, OSIRIS JSON normalizes exports from diverse sources and enables portable consumption by tools dedicated to diagramming, documentation, inventory/CMDB workflows, audit evidence and integrations without requiring each consumer to implement and maintain vendor-specific parsers.
+
+OSIRIS JSON defines a canonical JSON schema that **acts as a neutral middleware** between infrastructure data sources and consuming applications. Instead of embedding vendor-specific parsing logic into every tool, OSIRIS JSON adopts a translation-layer approach:
+
+- **PRODUCERS** (parsers, translators, discovery agents) translate source/vendor representations into OSIRIS JSON documents.
+- **CONSUMERS** (diagramming tools, CMDBs, IPAMs, DCIMs, documentation pipelines) read and process a single, well-defined schema.
+
+This decouples data sources from consuming applications, reducing integration complexity from S×C (S sources × C consumers) to P+C (P producers + C consumers).
+
+This decouples data sources from applications and reduces integration complexity. In an environment with **S** source systems and **C** consuming applications, integration effort shifts from **S×C** direct mappings to **S** producer mappings (**source > OSIRIS**) plus **C** consumer mappings (**OSIRIS > application**).
+
+</Card>
+
+## The challenge
+
+Infrastructure data is exposed through vendor-specific formats and models, with inconsistent semantics for equivalent concepts identity, properties, relationships and hierarchy. In mixed environments spanning hyperscalers, public cloud, on-prem systems and OT infrastructure, the problem compounds. The result is fragmented sometime high-cost tooling, inconsistent exports and documentation with fragmented or low quality topology that quickly becomes outdated.
+
+<Aside type="danger" title="Fragmentation consequences">
+	- **Integration complexity** - Tools must maintain vendor-specific adapters, mappings, and translators.
+	- **High maintenance cost** - Vendor-specific APIs and data models evolve, forcing continuous updates to parsers and integrations, which drives up maintenance costs over time.
+	- **Inconsistent topology semantics** - Relationships may be implicit, incomplete, or represented differently across sources, making topology comparison and reuse difficult.
+	- **Documentation drift** - Manual translation is fragile; documentation is poorly maintained, and diagrams are often of low quality, featuring chaotic layouts that quickly fall out of date.
+	- **Tribal knowledge risk** - Without a shared, open specification, critical context often lives in people's heads. When team members leave, that knowledge goes with them, making systems harder to understand and operate.
+	- **Lock-in risk** - Organizations may become dependent on closed, proprietary, or paid normalization solutions that are hard to replace or lack a long-term open vision.
+</Aside>
+
+<Aside type="tip" title="OSIRIS JSON Open Specification approach">
+	- **Neutral JSON interchange schema** - A vendor-neutral format for exchanging infrastructure resources and topology between systems.
+	- **Producers translate source exports into OSIRIS JSON documents** - Parsers/translators/discovery agents map native representations into the OSIRIS schema.
+	- **Consumers implement one schema for many sources** - Tools can read a single, well-defined document format across different environments.
+	- **Explicit, first-class topology relationships** - Connections, dependencies, containment, and grouping are represented directly so a snapshot can describe what exists and how it relates at a point in time.
+	- **Forward compatibility through safe ignoring of unknown fields** - Consumers can ignore unknown properties and extensions without breaking basic processing.
+	- **Extensions are natively supported** - A defined mechanism allows vendors and users to enrich documents without breaking interoperability.
+</Aside>
+
+## Core capabilities
+
+<CardGrid>
+	<Card title="Unified design">
+		Built for heterogeneous IT environments, with a clear extension path for OT and other domains as
+		adoption grows.
+	</Card>
+	<Card title="Explicit relationships model">
+		First-class representation of connections, dependencies, containment, and other topology
+		relationships.
+	</Card>
+	<Card title="Grouping constructs">
+		Support for logical and physical grouping that reflects real organizational and architectural
+		structures without forcing a single taxonomy.
+	</Card>
+	<Card title="Provider attribution">
+		Resources preserve traceability to their source system or provider while using a normalized,
+		vendor-neutral representation.
+	</Card>
+	<Card title="Extensibility">
+		A defined mechanism for vendor-specific properties and custom resource types without breaking
+		compatibility.
+	</Card>
+	<Card title="Three-Level validation">
+		Structural (schema), semantic and domain validation improving consistency and data quality when
+		validation tooling is applied.
+	</Card>
+</CardGrid>
+
+## Design principles
+
+### Static snapshot format
+
+OSIRIS JSON is a static snapshot interchange format. It captures what exists and how it relates at a point in time. It was not designed as a real-time monitoring system, a deployment tool, or an Infrastructure-as-Code engine.
+
+## What OSIRIS JSON is NOT
+
+<CardGrid>
+	<Card title="Not real-time telemetry and monitoring">
+		OSIRIS JSON **describes** topology and inventory state, not time-series metrics, logs or
+		observability data. Projects like Prometheus, Grafana, Zabbix, OpenTelemetry address telemetry
+		concerns.
+	</Card>
+	<Card title="Not infrastructure deployment and orchestration">
+		OSIRIS JSON is not an infrastructure-as-code language or a deployment specification. Projects
+		like Terraform, CloudFormation or TOSCA Oasis address deployment workflows.
+	</Card>
+	<Card title="Not configuration management">
+		OSIRIS JSON does not define or enforce desired state configuration for resources. Configuration
+		management systems like Ansible, Puppet, Chef, Salt serve this purpose.
+	</Card>
+	<Card title="Not change tracking and history">
+		OSIRIS JSON represents a point-in-time snapshot. Tracking changes over time is the
+		responsibility of producing and consuming systems.
+	</Card>
+	<Card title="Not authentication, authorization and access policies">
+		OSIRIS JSON may carry metadata describing boundaries or ownership, but it does not define access
+		control mechanisms or policies.
+	</Card>
+	<Card title="Cost and billing information">
+		Detailed billing and financial modeling are outside the core schema scope, although cost-related
+		metadata may be included by extension.
+	</Card>
+</CardGrid>
+
+## Document structure
+
+OSIRIS JSON documents are JSON objects. In Specification v1.0.0, the top-level object is defined around three fields: **version**, **metadata**, and **topology**.
+An optional `$schema` field may be included to reference the schema URI.
+
+:::note
+This is a top-level OSIRIS JSON schema outline. $defs are omitted here for top-level readability, refer to the canonical URI for the full schema.
+:::
+
+The OSIRIS JSON core schema defines:
+
+```json
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema#",
+	"$id": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+	"title": "OSIRIS JSON Core Schema v1.0",
+	"description": "OSIRIS Open Specification for Infrastructure Resource Interchange Schema. This schema encodes baseline interoperability requirements; additional semantic rules (e.g. referential integrity, uniqueness) are validated by tooling.",
+	"type": "object",
+	"required": ["version", "metadata", "topology"],
+	"properties": {
+		"$schema": {
+			"type": "string",
+			"description": "Optional JSON Schema dialect reference for OSIRIS JSON documents.",
+			"format": "uri"
+		},
+		"version": {
+			"type": "string",
+			"description": "OSIRIS JSON specification version of this document (semver). For the v1.0 schema endpoint, any 1.x.y is allowed.",
+			"pattern": "^1\\.[0-9]+\\.[0-9]+$"
+		},
+		"metadata": {
+			"$ref": "#/$defs/metadata"
+		},
+		"topology": {
+			"$ref": "#/$defs/topology"
+		}
+	},
+	"additionalProperties": true,
+	"$defs": {
+		"osirisType": {},
+		"providerName": {},
+		"namespaceKey": {},
+		"tags": {},
+		"freeformObject": {},
+		"extensions": {},
+		"provider": {},
+		"resource": {},
+		"connectionDirection": {},
+		"connectionType": {},
+		"connection": {},
+		"group": {},
+		"topology": {},
+		"metadataGenerator": {},
+		"metadataScope": {},
+		"metadata": {}
+	}
+}
+```
+
+<CardGrid>
+	<Card title="topology.resources">
+		Uniquely identifiable infrastructure entities with properties and provider attribution.
+	</Card>
+	<Card title="topology.connections">
+		Explicit relationships and direction between resources (network, dependency, containment, data
+		flow, etc.).
+	</Card>
+	<Card title="topology.groups">
+		Logical or physical collections that organize resources (e.g. VPC, subnet, rack, data center).
+	</Card>
+</CardGrid>
+
+## Validation and interoperability
+
+:::tip[Schema conformance]
+OSIRIS v1.0 documents must conform to the JSON Schema.
+Consumers should ignore unknown fields for forward compatibility and apply version compatibility rules before processing.
+:::
+
+## Next steps
+
+<LinkCard
+	title="Read the specification"
+	description="Browse the OSIRIS JSON Specification"
+	href="https://osirisjson.org/en/specification"
+/>
+<LinkCard
+	title="Explore OSIRIS JSON examples"
+	description="Sample OSIRIS JSON documents for IT and OT infrastructure"
+	href="/examples/it-infrastructure/"
+/>
+<LinkCard
+	title="Getting started with producers"
+	description="Learn how to get a first snapshot of your infrastructure with OSIRIS"
+	href="/osiris-producers/getting-started"
+/>

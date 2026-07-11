@@ -1,0 +1,83 @@
+---
+title: 'OSIRIS JSON Support & Security'
+description: 'Get support for OSIRIS JSON. Learn how to ask questions, report bugs, and privately disclose security vulnerabilities.'
+lastUpdated: 2026-07-10T09:00:00Z
+sidebar:
+  label: 'Support'
+  order: 2
+---
+
+import { CardGrid, Card, Aside } from '@astrojs/starlight/components';
+
+As an open-source project, OSIRIS JSON relies on community support channels to help users deploy producers, build consumers, and leverage the specification. This guide explains how to ask questions, report bugs, and privately submit security concerns.
+
+---
+
+## Technical Support Channels
+
+Before opening a bug report or requesting support, please check if your question has already been answered:
+
+<CardGrid>
+  <Card title="GitHub Discussions (Q&A & Ideas)">
+    For architectural questions, implementation advice, how-to guides, and early feature feedback.
+    
+    [Go to GitHub Discussions](https://github.com/osirisjson/osiris/discussions)
+  </Card>
+
+  <Card title="GitHub Issues (Specification)">
+    For reporting reproducible bugs in the core schema, architectural guidelines and the OSIRIS JSON Specification.
+    
+    [Open a GitHub Issue](https://github.com/osirisjson/osiris/issues)
+  </Card>
+
+  <Card title="GitHub Issues (Documents)">
+    For reporting reproducible bugs in this documentation repository that include also docs.osirisjson.org website.
+    
+    [Open a GitHub Issue](https://github.com/osirisjson/osirisjson-docs/issues)
+  </Card>
+
+  <Card title="GitHub Issues (Producers)">
+    For reporting reproducible bugs in the the OSIRIS JSON Producers and relative documentation.
+    
+    [Open a GitHub Issue](https://github.com/osirisjson/osiris-producers/issues)
+  </Card>
+</CardGrid>
+
+---
+
+## How to Report a Bug
+
+To help maintainers diagnose and resolve issues quickly, please include the following details in your GitHub Issue:
+
+1. **Clear Description**: Describe what happened and what you expected to happen instead.
+2. **Affected Version**: Specify the version of the OSIRIS schema (e.g., `v1.0.0`) or the CLI tool version (`osirisjson-producer azure --version`).
+3. **Reproduction Steps**: List the exact commands run or steps taken to trigger the bug.
+4. **Sanitized Input**: Provide a minimal, sanitized OSIRIS JSON snippet that reproduces the issue. 
+5. **System Context**: Include details about your operating system, Go version (if compiling from source), and CLI environment.
+
+<Aside type="caution" title="Never Share Production Data">
+  When attaching logs or JSON snippets to a public issue, always ensure you have redacted all private IP addresses, credentials, domain names, and sensitive organization names.
+</Aside>
+
+---
+
+## Security Policy & Vulnerability Reporting
+
+The OSIRIS JSON project takes the security of its schemas, producer SDKs, and tooling seriously. If you suspect a vulnerability, **do not file a public GitHub issue or post in discussions.**
+
+### Private Reporting Channels
+Suspected vulnerabilities should be reported privately using one of the following channels:
+1. **GitHub Security Advisory (Preferred)**: Open a private advisory report through the GitHub interface:  
+   [Open a Private Security Report](https://github.com/osirisjson/osiris-producers/security/advisories/new)
+2. **Email**: Send your assessment directly to:  
+   `community@osirisjson.org`
+
+### What to Include in a Security Report
+Please provide:
+- A description of the vulnerability and its potential impact (confidentiality, integrity, availability).
+- The specific package, SDK function, or CLI binary affected.
+- Step-by-step instructions or a minimal proof of concept (PoC) script.
+- Any known mitigations or workarounds.
+
+### Coordinated Disclosure Timeline
+We aim to acknowledge receipt of all private security reports within **3 business days** and provide an initial assessment within **7 business days**. Fixes will be coordinated and released in patches before public disclosures are published.

@@ -1,0 +1,568 @@
+---
+title: 'OSIRIS JSON Producer for Cisco'
+description: 'OSIRIS JSON producer for Cisco infrastructure: ACI/APIC, NX-OS, and IOS-XE platforms.'
+lastUpdated: 2026-04-05T00:00:00Z
+sidebar:
+  label: 'Cisco'
+  order: 10
+---
+
+import { CardGrid, Card, Badge } from '@astrojs/starlight/components';
+
+The OSIRIS JSON Cisco producer connects to Cisco infrastructure platforms (APIC, NX-OS, IOS-XE) and generates OSIRIS JSON snapshots of your network topology, devices, interfaces, and connections.
+
+## Prerequisites
+
+1. Install the OSIRIS Producer - see the [How to Install](/osiris-producers/installation/) page for more install options.
+
+## Supported platforms
+
+<CardGrid>
+	<Card title="ACI / APIC">
+		<Badge text="available" variant="success" /> Application Policy Infrastructure Controller
+
+    	Transport: REST API
+    </Card>
+    <Card title="NX-OS">
+    	<Badge text="available" variant="success" /> Nexus data center switches
+
+    	Transport: NX-API CLI
+    </Card>
+    <Card title="IOS-XE">
+    	<Badge text="available" variant="success" /> Enterprise routers and switches
+
+    	Transport: NETCONF/YANG over SSH
+    </Card>
+
+</CardGrid>
+
+## CLI usage
+
+The Cisco producer uses a dispatcher-style CLI with sub-producers:
+
+```
+osirisjson-producer cisco <subcommand> [flags]
+```
+
+### Single mode
+
+Connect to one device and save an OSIRIS JSON document as `cisco-<type>-<timestamp>-<hostname>.json`:
+
+```bash
+# ACI fabric snapshot via APIC
+osirisjson-producer cisco apic -h 10.0.0.1 -u admin -p secret
+
+# NX-OS device snapshot
+osirisjson-producer cisco nxos -h switch01.example.com -u admin -p secret
+
+# IOS-XE device snapshot
+osirisjson-producer cisco iosxe -h router01.example.com -u admin --insecure
+```
+
+If `-p` / `--password` is omitted, the CLI prompts interactively.
+
+### Batch mode
+
+Collect from multiple devices listed in a CSV file. Output is organized as a hierarchical directory structure: `DC/Floor/Room/Zone/Hostname.json`.
+
+```bash
+osirisjson-producer cisco apic -s datacenter.csv -o ./output -u admin -p secret
+```
+
+Generate a CSV template to get started:
+
+```bash
+osirisjson-producer cisco template --generate apic
+```
+
+The CSV template uses these columns:
+
+| Column     | Required | Description                                                 |
+| ---------- | -------- | ----------------------------------------------------------- |
+| `dc`       |          | Datacenter name (used for output folder hierarchy)          |
+| `floor`    |          | Floor identifier                                            |
+| `room`     |          | Room identifier                                             |
+| `zone`     |          | Zone or pod identifier                                      |
+| `hostname` | yes      | Device label used as output filename                        |
+| `type`     | yes      | Producer type: `apic`, `nxos`, `iosxe`                      |
+| `ip`       | yes      | IP address or FQDN of the target device                     |
+| `port`     |          | Override port (default: producer-specific)                  |
+| `owner`    |          | `self` (default), `isp`, or `colo` - operator metadata only |
+| `notes`    |          | Free-text notes (ignored by producer)                       |
+
+Credentials are provided via `-u`/`-p` flags and apply to all targets in the batch.
+
+## Flags reference
+
+### Single mode flags
+
+| Flag                  | Short | Description                                                       |
+| --------------------- | ----- | ----------------------------------------------------------------- |
+| `--host`              | `-h`  | Target host (IP or FQDN, optionally with `:port`)                 |
+| `--username`          | `-u`  | Username for authentication                                       |
+| `--password`          | `-p`  | Password (omit for interactive prompt)                            |
+| `--port`              | `-P`  | Override port (default: producer-specific)                        |
+| `--detail`            |       | Detail level: `minimal` (default) or `detailed`                   |
+| `--insecure`          |       | Skip TLS certificate verification                                 |
+| `--safe-failure-mode` |       | Secret handling: `fail-closed` (default), `log-and-redact`, `off` |
+
+### Batch mode flags
+
+| Flag         | Short | Description                                                         |
+| ------------ | ----- | ------------------------------------------------------------------- |
+| `--source`   | `-s`  | CSV file with targets                                               |
+| `--output`   | `-o`  | Output directory (hierarchical: `DC/Floor/Room/Zone/Hostname.json`) |
+| `--username` | `-u`  | Default username for all targets                                    |
+| `--password` | `-p`  | Default password for all targets                                    |
+
+### Global flags
+
+| Flag               | Description              |
+| ------------------ | ------------------------ |
+| `--version` / `-v` | Display version and exit |
+| `--help`           | Display help and exit    |
+
+## What each platform collects
+
+### ACI / APIC
+
+The APIC producer queries the following MO classes via the REST API:
+
+**Minimal mode:**
+
+| MO Class          | Description                                                      |
+| ----------------- | ---------------------------------------------------------------- |
+| `fabricNode`      | Fabric nodes (controllers, spines, leafs)                        |
+| `topSystem`       | System attributes (uptime, state, fabric MAC, control plane MTU) |
+| `firmwareRunning` | Running firmware versions                                        |
+| `fvTenant`        | Tenant definitions                                               |
+| `fvCtx`           | VRF contexts                                                     |
+| `fvBD`            | Bridge domains                                                   |
+| `fvSubnet`        | Subnets                                                          |
+| `fvAEPg`          | Application endpoint groups                                      |
+| `l3extOut`        | L3 external connectivity                                         |
+| `faultInst`       | Active fault instances                                           |
+
+**Detailed mode adds:**
+
+| MO Class | Description                                         |
+| -------- | --------------------------------------------------- |
+| `fvCEp`  | Client endpoints (MAC, VLAN encap, leaf attachment) |
+
+### NX-OS
+
+The NX-OS producer sends NX-API CLI commands in batched requests:
+
+**Minimal mode:**
+
+| Command                      | Description                                        |
+| ---------------------------- | -------------------------------------------------- |
+| `show version`               | Device model, serial number, OS version, uptime    |
+| `show inventory`             | Hardware inventory (modules, power supplies, fans) |
+| `show interface brief`       | Interface names, states, speeds, VLANs             |
+| `show vlan brief`            | VLAN IDs, names, and member interfaces             |
+| `show vrf all detail`        | VRF definitions and member interfaces              |
+| `show lldp neighbors detail` | LLDP neighbor discovery                            |
+| `show vpc brief`             | vPC domain, peer status, keepalive                 |
+| `show port-channel summary`  | Port-channel configurations                        |
+
+**Detailed mode adds:**
+
+| Command                 | Description                                             |
+| ----------------------- | ------------------------------------------------------- |
+| `show interface`        | Full interface stats (MTU, bandwidth, duplex, counters) |
+| `show system resources` | CPU idle %, memory usage, load averages                 |
+| `show environment`      | Power supplies, fan status, temperatures                |
+
+### IOS-XE
+
+The IOS-XE producer uses NETCONF/YANG RPCs over SSH (default port 830):
+
+**Minimal mode:**
+
+| YANG Model                          | Description                 |
+| ----------------------------------- | --------------------------- |
+| `Cisco-IOS-XE-native`               | Device version and hostname |
+| `ietf-interfaces`                   | Interface details           |
+| `Cisco-IOS-XE-device-hardware-oper` | Hardware inventory          |
+| `Cisco-IOS-XE-cdp-oper`             | CDP neighbor discovery      |
+| `Cisco-IOS-XE-native (vrf)`         | VRF definitions             |
+
+**Detailed mode adds:**
+
+| YANG Model                      | Description                     |
+| ------------------------------- | ------------------------------- |
+| `Cisco-IOS-XE-bgp-oper`         | BGP neighbor details            |
+| `Cisco-IOS-XE-ospf-oper`        | OSPF process and neighbor state |
+| `Cisco-IOS-XE-process-cpu-oper` | CPU utilization                 |
+| `Cisco-IOS-XE-memory-oper`      | Memory statistics               |
+
+## OSIRIS JSON output structure
+
+All three producers emit the same OSIRIS JSON envelope:
+
+```json
+{
+  "$schema": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+  "version": "1.0.0",
+  "metadata": {
+    "generator": {
+      "name": "osirisjson-producer-cisco-<platform>",
+      "version": "0.1.0"
+    },
+    "scope": {
+      "providers": ["cisco"]
+    }
+  },
+  "topology": {
+    "resources": [ ... ],
+    "connections": [ ... ],
+    "groups": [ ... ]
+  }
+}
+```
+
+### Resource types by platform
+
+Resource types follow the OSIRIS JSON v1.0 specification. Core types are used where defined; vendor-specific types use the `osiris.cisco.*` namespace.
+
+**IOS-XE:**
+
+- `network.router` - Primary device (core)
+- `network.interface` - Physical and logical interfaces (core)
+- `osiris.cisco.interface.lag` - Port-channel / LAG interfaces
+
+**NX-OS:**
+
+- `osiris.cisco.switch.spine` / `osiris.cisco.switch.leaf` - Device (role-classified)
+- `network.interface` - Physical and logical interfaces (core)
+- `osiris.cisco.interface.lag` - Port-channels
+
+**APIC:**
+
+- `osiris.cisco.controller` - APIC controllers
+- `osiris.cisco.switch.spine` / `osiris.cisco.switch.leaf` - Fabric switches
+- `osiris.cisco.domain.bridge` - Bridge domains
+- `network.subnet` - Subnets (core)
+- `osiris.cisco.l3out` - L3 external networks
+- `osiris.cisco.endpoint` - Client endpoints (detailed mode only)
+
+### Connection types
+
+- **IOS-XE / NX-OS:** `physical.ethernet` for CDP/LLDP-discovered links between interfaces
+- **APIC:** `contains` for tenant hierarchy containment, `network` for bridge domain associations
+
+### Group types by platform
+
+**IOS-XE:** `logical.vrf`
+
+**NX-OS:** `logical.vrf`, `network.vlan`, `network.vpc`
+
+**APIC:** `logical.tenant`, `logical.vrf`, `osiris.cisco.epg`
+
+### Connection discovery
+
+- **IOS-XE** discovers neighbors via **CDP** (Cisco Discovery Protocol)
+- **NX-OS** discovers neighbors via **LLDP** (Link Layer Discovery Protocol)
+- **APIC** uses containment hierarchy (tenants -> BDs -> subnets -> EPGs) rather than point-to-point links
+
+Remote devices discovered via CDP/LLDP are added as stub resources with `status: unknown`.
+
+## Examples
+
+### IOS-XE - single device, minimal mode
+
+```bash
+osirisjson-producer cisco iosxe -h 10.99.0.1 -u admin -p secret
+```
+
+Output (trimmed):
+
+```json
+{
+	"$schema": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+	"version": "1.0.0",
+	"metadata": {
+		"generator": {
+			"name": "osirisjson-producer-cisco-iosxe",
+			"version": "0.1.0"
+		},
+		"scope": {
+			"providers": ["cisco"]
+		}
+	},
+	"topology": {
+		"resources": [
+			{
+				"id": "cisco-iosxe-LAB-RTR01",
+				"type": "network.router",
+				"name": "LAB-RTR01",
+				"status": "active",
+				"provider": {
+					"name": "cisco",
+					"type": "ISR4451-X/K9",
+					"version": "16.9"
+				},
+				"extensions": {
+					"osiris.cisco": {
+						"inventory": [
+							{ "name": "Chassis", "description": "ISR4451-X/K9", "serial": "FDO12345678" }
+						]
+					}
+				}
+			},
+			{
+				"id": "cisco-iosxe-LAB-RTR01-GigabitEthernet0/0/0",
+				"type": "network.interface",
+				"name": "GigabitEthernet0/0/0",
+				"status": "active",
+				"properties": {
+					"speed": "1000000000",
+					"description": "WAN uplink"
+				}
+			}
+		],
+		"connections": [
+			{
+				"source": "cisco-iosxe-LAB-RTR01-GigabitEthernet0/0/0",
+				"target": "cisco-iosxe-stub-REMOTE-SW01-GigabitEthernet1/0/1",
+				"type": "physical.ethernet",
+				"status": "active"
+			}
+		],
+		"groups": [
+			{
+				"id": "cisco-iosxe-LAB-RTR01-vrf-CORP",
+				"type": "logical.vrf",
+				"name": "CORP",
+				"members": ["cisco-iosxe-LAB-RTR01-GigabitEthernet0/0/0", "cisco-iosxe-LAB-RTR01-Loopback0"]
+			}
+		]
+	}
+}
+```
+
+### NX-OS - single device, detailed mode
+
+```bash
+osirisjson-producer cisco nxos -h switch01.lab -u admin -p secret --detail detailed
+```
+
+Output (trimmed):
+
+```json
+{
+	"$schema": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+	"version": "1.0.0",
+	"metadata": {
+		"generator": {
+			"name": "osirisjson-producer-cisco-nxos",
+			"version": "0.1.0"
+		},
+		"scope": {
+			"providers": ["cisco"]
+		}
+	},
+	"topology": {
+		"resources": [
+			{
+				"id": "cisco-nxos-LAB-SW01",
+				"type": "osiris.cisco.switch.leaf",
+				"name": "LAB-SW01",
+				"status": "active",
+				"provider": {
+					"name": "cisco",
+					"type": "Nexus9000 C9508",
+					"version": "10.3(4a)"
+				},
+				"extensions": {
+					"osiris.cisco": {
+						"bios_version": "08.40",
+						"kernel_uptime": "15d 3h 22m 10s",
+						"cpu_idle": 85.5,
+						"load_avg_1min": 1.23,
+						"memory_used": 8192,
+						"memory_free": 24576,
+						"power_supplies": [
+							{ "id": "1", "model": "NXA-PAC-1100W", "watts": 350, "status": "ok" }
+						],
+						"fans": [{ "name": "Fan1", "status": "ok" }],
+						"temperatures": [{ "sensor": "SUP slot 1", "celsius": 35.5 }]
+					}
+				}
+			},
+			{
+				"id": "cisco-nxos-LAB-SW01-Ethernet1/1",
+				"type": "network.interface",
+				"name": "Ethernet1/1",
+				"status": "active",
+				"properties": {
+					"speed": "10000000000",
+					"description": "Server-facing"
+				}
+			}
+		],
+		"connections": [
+			{
+				"source": "cisco-nxos-LAB-SW01-Ethernet1/1",
+				"target": "cisco-nxos-stub-REMOTE-SW01-Ethernet1/49",
+				"type": "physical.ethernet",
+				"status": "active"
+			}
+		],
+		"groups": [
+			{
+				"id": "cisco-nxos-LAB-SW01-vlan-100",
+				"type": "network.vlan",
+				"name": "PROD",
+				"members": ["cisco-nxos-LAB-SW01-Ethernet1/1"]
+			},
+			{
+				"id": "cisco-nxos-LAB-SW01-vpc-10",
+				"type": "network.vpc",
+				"name": "vPC domain 10",
+				"extensions": {
+					"osiris.cisco": {
+						"role": "primary",
+						"peer_status": "peer-ok",
+						"keepalive_status": "peer-alive"
+					}
+				}
+			}
+		]
+	}
+}
+```
+
+### APIC - ACI fabric snapshot
+
+```bash
+osirisjson-producer cisco apic -h 10.0.0.1 -u admin -p secret --detail detailed
+```
+
+Output (trimmed):
+
+```json
+{
+	"$schema": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+	"version": "1.0.0",
+	"metadata": {
+		"generator": {
+			"name": "osirisjson-producer-cisco-apic",
+			"version": "0.1.0"
+		},
+		"scope": {
+			"providers": ["cisco"]
+		}
+	},
+	"topology": {
+		"resources": [
+			{
+				"id": "cisco-apic-apic1",
+				"type": "osiris.cisco.controller",
+				"name": "apic1",
+				"status": "active",
+				"provider": {
+					"name": "cisco",
+					"type": "APIC-SERVER-M3",
+					"version": "6.0(2h)",
+					"site": "pod-1"
+				}
+			},
+			{
+				"id": "cisco-apic-spine1",
+				"type": "osiris.cisco.switch.spine",
+				"name": "spine1",
+				"status": "active",
+				"provider": {
+					"name": "cisco",
+					"type": "N9K-C9336C-FX2",
+					"version": "n9000-16.0(2h)",
+					"site": "pod-1"
+				},
+				"extensions": {
+					"osiris.cisco": {
+						"fabric_mac": "AA:BB:CC:DD:EE:01",
+						"control_plane_mtu": 9000,
+						"faults": [{ "code": "F1527", "severity": "warning", "description": "storage full" }]
+					}
+				}
+			},
+			{
+				"id": "cisco-apic-bd-bd_App",
+				"type": "osiris.cisco.domain.bridge",
+				"name": "bd_App",
+				"status": "active"
+			},
+			{
+				"id": "cisco-apic-subnet-10.0.0.1/24",
+				"type": "network.subnet",
+				"name": "10.0.0.1/24",
+				"status": "active"
+			},
+			{
+				"id": "cisco-apic-ep-AA:BB:CC:DD:EE:FF",
+				"type": "osiris.cisco.endpoint",
+				"name": "AA:BB:CC:DD:EE:FF",
+				"status": "active",
+				"properties": {
+					"encap": "vlan-100",
+					"leaf": "leaf1",
+					"interface": "eth1/1"
+				}
+			}
+		],
+		"groups": [
+			{
+				"id": "cisco-apic-tenant-tn_Example",
+				"type": "logical.tenant",
+				"name": "tn_Example",
+				"children": ["cisco-apic-vrf-tn_Example-vrf_Main", "cisco-apic-epg-tn_Example-epg_WEB"]
+			},
+			{
+				"id": "cisco-apic-vrf-tn_Example-vrf_Main",
+				"type": "logical.vrf",
+				"name": "vrf_Main"
+			},
+			{
+				"id": "cisco-apic-epg-tn_Example-epg_WEB",
+				"type": "osiris.cisco.epg",
+				"name": "epg_WEB",
+				"members": ["cisco-apic-ep-AA:BB:CC:DD:EE:FF"]
+			}
+		]
+	}
+}
+```
+
+### Batch mode - multi-device collection
+
+Create a CSV inventory file:
+
+```csv
+dc,floor,room,zone,hostname,type,ip,port,owner,notes
+AMS-01,F3,R301,POD-A,apic-01,apic,10.10.1.1,,self,Primary controller
+AMS-01,F3,R301,POD-A,nx-spine-01,nxos,10.10.1.10,,self,Spine switch
+AMS-01,F3,R302,POD-B,xe-router-01,iosxe,172.16.0.1,,isp,PE router
+```
+
+Run the batch:
+
+```bash
+osirisjson-producer cisco apic -s inventory.csv -o ./output -u admin -p secret
+```
+
+The resulting output directory:
+
+```
+output/
+  AMS-01/
+    F3/
+      R301/
+        POD-A/
+          apic-01.json
+          nx-spine-01.json
+      R302/
+        POD-B/
+          xe-router-01.json
+```

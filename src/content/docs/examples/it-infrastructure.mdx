@@ -1,0 +1,69 @@
+---
+title: 'OSIRIS JSON IT Infrastructure Examples'
+description: 'Browse reference OSIRIS JSON documents for public cloud, hybrid cloud, and on-premises IT environments. Understand resource mappings and topology representations.'
+lastUpdated: 2026-07-10T09:00:00Z
+sidebar:
+  label: 'IT Infrastructure examples'
+  order: 0
+---
+
+import { CardGrid, Card, Aside } from '@astrojs/starlight/components';
+
+To help you understand how the OSIRIS JSON specification maps raw, vendor-specific infrastructure configurations to a unified, vendor-neutral schema, we have provided a set of reference JSON files. These examples represent common enterprise topologies across cloud, hybrid, and on-premises architectures.
+
+Each example demonstrates the application of the three core pillars of the OSIRIS schema:
+- **`resources`**: The discrete inventory items (VMs, subnets, routers) with their unique identifiers and properties.
+- **`connections`**: Explicit directional edges (containment, network routing, storage dependency) linking those resources.
+- **`groups`**: Logical and physical boundaries (AWS accounts, Azure resource groups, geographic regions, VRFs).
+
+---
+
+## Exploring the IT Example Catalog
+
+Browse the catalog below to find the schema configuration that aligns with your environment. You can open or download the raw JSON files directly:
+
+<CardGrid>
+  <Card title="Cloud Provider (Minimal)">
+    A minimal, entry-level cloud snapshot designed to show the core envelope structure. Ideal for developers writing their first producer parser.
+    
+    [Open the minimal cloud example](/examples/v1.0/IT/cloud/osiris_minimal_cloud_provider_infrastructure.json)
+  </Card>
+
+  <Card title="Hyperscalers (AWS, Azure, Multi-Cloud)">
+    Examples of native public cloud topologies, showcasing how ARM resource IDs and AWS ARNs map into a single canonical ID structure.
+    - [Minimal Hyperscalers Infrastructure](/examples/v1.0/IT/hyperscalers/osiris_minimal_hyperscalers_infrastructure.json)
+    - [AWS Three-Tier Web Application](/examples/v1.0/IT/hyperscalers/osiris_simple_hyperscaler_infrastructure.json)
+    - [Microsoft Azure Resource Group Hierarchy](/examples/v1.0/IT/hyperscalers/osiris_hyperscaler_infrastructure_belonging.json)
+    - [Multi-Cloud Web Application (AWS + Azure)](/examples/v1.0/IT/hyperscalers/osiris_multi_hyperscaler_environment.json)
+  </Card>
+
+  <Card title="Hybrid Cloud Infrastructure">
+    A complex topology showcasing cross-domain connections. It demonstrates how to link on-premises resources (hypervisors, physical switches) to public cloud endpoints via ExpressRoute or VPN Gateways.
+    
+    [Open the hybrid cloud example](/examples/v1.0/IT/hybrid/osiris_hybrid_hyperscaler_on_premise.json)
+  </Card>
+
+  <Card title="On-Premises Hardware & Networks">
+    Classic data center architectures containing physical assets. These show how to map physical network interfaces, switch-to-switch links (LLDP/CDP), and virtualization layers.
+    - [Minimal On-Premises Infrastructure](/examples/v1.0/IT/on-premise/osiris_minimal_on_premise_infrastructure.json)
+    - [Arista Spine/Leaf network topology](/examples/v1.0/IT/on-premise/osiris_on_premise_network_topology.json)
+  </Card>
+</CardGrid>
+
+---
+
+## Architectural Patterns Illustrated
+
+When reviewing these OSIRIS JSON examples, pay special attention to the following design patterns:
+
+### 1. Canonical Resource Naming
+OSIRIS encourages a prefix-based, globally unique naming convention for resource IDs (e.g., `aws::arn:aws:ec2:...` or `azure::/subscriptions/...`). This ensures that when multiple snapshots from different providers are merged, resources never experience naming collisions.
+
+### 2. Explicit Topology Relationships
+Instead of forcing consumers to infer routing or containment based on subnets or folders, connections are declared as explicit objects:
+- `contains`: Demarcates physical or logical containment (e.g., a Subnet containing a Virtual Machine).
+- `network`: Indicates that data flow is possible between two interfaces or nodes.
+- `dependency`: Represents logical coupling (e.g., an App Service Web App bound to a backend SQL Database).
+
+### 3. Graceful Degradation under Partial Data
+Enterprise environments are rarely perfectly documented. The OSIRIS specification supports partial data mapping. If a producer cannot query a remote peering link due to permissions, it represents the remote end as a stub resource with `status: unknown`, allowing the connection edge to survive the organizational boundary.
