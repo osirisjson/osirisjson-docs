@@ -133,4 +133,9 @@ export default defineConfig({
 		}),
 		sitemap(),
 	],
+	vite: {
+		build: {
+			cssMinify: 'esbuild',
+		},
+	},
 });
