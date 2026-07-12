@@ -78,7 +78,7 @@ export const navEntries: NavEntry[] = [
 						target: '_blank',
 					},
 					{
-						label: 'Presentation slide desk',
+						label: 'Presentation slide deck',
 						href: `${ORG_SITE}/assets/media-kit/osiris-json-value-deck.pptx`,
 						target: '_blank',
 					},
