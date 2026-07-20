@@ -16,8 +16,8 @@ As an **interchange schema**, OSIRIS JSON normalizes exports from diverse source
 
 OSIRIS JSON defines a canonical JSON schema that **acts as a neutral middleware** between infrastructure data sources and consuming applications. Instead of embedding vendor-specific parsing logic into every tool, OSIRIS JSON adopts a translation-layer approach:
 
-- **PRODUCERS** (parsers, translators, discovery agents) translate source/vendor representations into OSIRIS JSON documents.
-- **CONSUMERS** (diagramming tools, CMDBs, IPAMs, DCIMs, documentation pipelines) read and process a single, well-defined schema.
+- **[PRODUCERS](/osiris-producers/getting-started/)** translate platforms and vendor-specific data formats into vendor-neutral OSIRIS JSON documents.
+- **[CONSUMERS](/osiris-consumers/getting-started/)** read and process OSIRIS JSON documents to automatically generate comprehensive infrastructure reports and draw.io topologies. They can also run a diff between historical documents to instantly visualize configuration drift over time all without requiring AI, third-party licenses, or SaaS solutions.
 
 This decouples data sources from consuming applications, reducing integration complexity from S×C (S sources × C consumers) to P+C (P producers + C consumers).
 
