@@ -1,7 +1,7 @@
 ---
 title: 'OSIRIS JSON Toolbox CLI'
 description: 'Reference guide for the OSIRIS JSON Toolbox CLI. Learn about validation flags, exit codes, and CI/CD integration.'
-lastUpdated: 2026-05-20T09:00:00Z
+lastUpdated: 2026-07-21T00:00:00Z
 sidebar:
   label: 'Toolbox CLI'
   order: 0
@@ -26,7 +26,18 @@ The CLI is distributed as an NPM package. You can run it directly using `npx` or
   <TabItem label="Global Installation">
     ```bash
     npm install -g @osirisjson/cli
-    osirisjson-cli validate snapshot.json
+    
+    # Validate a single file
+    osirisjson validate snapshot.json
+
+    # Validate all JSON files in a directory
+    osirisjson validate ./exports/
+
+    # Validate from stdin
+    cat snapshot.json | osirisjson validate -
+
+    # Strict profile with JSON output
+    osirisjson validate --profile strict --format json snapshot.json
     ```
   </TabItem>
 </Tabs>
