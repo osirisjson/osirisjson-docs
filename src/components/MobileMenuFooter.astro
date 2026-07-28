@@ -21,7 +21,11 @@ import githubIconRaw from '../assets/icons/brand/github.svg?raw';
 									<a
 										href={item.href}
 										target={item.target}
-										rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}
+										rel={
+											item.target === '_blank'
+												? 'noopener noreferrer'
+												: undefined
+										}
 									>
 										{item.label}
 									</a>
@@ -45,7 +49,7 @@ import githubIconRaw from '../assets/icons/brand/github.svg?raw';
 		aria-label="GitHub"
 		set:html={githubIconRaw}
 	/>
-	<a class="try-osiris-link" href="https://osirisjson.org/en#download">Try OSIRIS</a>
+	<a class="try-osiris-link" href="osiris-producers/installation/">Download OSIRIS</a>
 </div>
 
 <style>

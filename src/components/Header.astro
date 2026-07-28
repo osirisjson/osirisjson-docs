@@ -50,8 +50,8 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 		<div class="search-wrapper">
 			<Search />
 		</div>
-		<a href="https://osirisjson.org/en#download" class="try-osiris-link sl-hidden md:sl-flex"
-			>Try OSIRIS</a
+		<a href="osiris-producers/installation/" class="try-osiris-link sl-hidden md:sl-flex"
+			>Download OSIRIS</a
 		>
 	</div>
 </div>
@@ -90,10 +90,14 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 				--__toc-width: 0rem;
 			}
 			.header {
-				--__sidebar-width: max(0rem, var(--sl-content-inline-start, 0rem) - var(--sl-nav-pad-x));
+				--__sidebar-width: max(
+					0rem,
+					var(--sl-content-inline-start, 0rem) - var(--sl-nav-pad-x)
+				);
 				--__main-column-fr: calc(
 					(
-							100% + var(--__sidebar-pad, 0rem) - var(--__toc-width, var(--sl-sidebar-width)) -
+							100% + var(--__sidebar-pad, 0rem) -
+								var(--__toc-width, var(--sl-sidebar-width)) -
 								(2 * var(--__toc-width, var(--sl-nav-pad-x))) -
 								var(--sl-content-inline-start, 0rem) - var(--sl-content-width)
 						) /
@@ -102,7 +106,10 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 				display: grid;
 				grid-template-columns:
 					minmax(
-						calc(var(--__sidebar-width) + max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))),
+						calc(
+							var(--__sidebar-width) +
+								max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))
+						),
 						auto
 					)
 					1fr
@@ -180,7 +187,7 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 	.try-osiris-link:hover {
 		background-color: #23355f;
 	}
-	
+
 	.search-wrapper {
 		display: flex;
 		align-items: center;
