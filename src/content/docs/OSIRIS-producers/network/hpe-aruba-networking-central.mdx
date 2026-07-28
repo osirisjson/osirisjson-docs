@@ -1,0 +1,625 @@
+---
+title: 'OSIRIS JSON Producer for HPE Aruba Networking Central platform'
+description: 'OSIRIS JSON producer for HPE infrastructure for Aruba Networking Central platform.'
+lastUpdated: 2026-07-28T00:00:00Z
+sidebar:
+  label: 'HPE'
+  order: 2
+---
+
+import { Aside,CardGrid, Card, Badge } from '@astrojs/starlight/components';
+
+The OSIRIS JSON HPE producer connects to HPE infrastructure platforms (in its first 0.1.0 release, Aruba Central is supported and others will come later) and generates OSIRIS JSON snapshots of your network topology, devices, interfaces, and connections.
+
+## Prerequisites
+
+1. Install the OSIRIS Producer - see the [How to Install](/osiris-producers/installation/) page for more install options.
+
+## Supported platforms
+
+<CardGrid>
+	<Card title="Aruba Networking Central">
+		<Badge text="available" variant="success" /> cloud-native, AI-powered network management platform that unifies Wi-Fi, switching, and SD-WAN operations
+
+    	Transport: REST API
+    </Card>
+</CardGrid>
+
+## Authentication
+
+The Aruba Central producer supports two credential types:
+
+1. **API Gateway application**: Standard `client_id` and `client_secret` plus an OAuth2 token pair (`access_token` and `refresh_token`), created via the Central UI or OAuth2 flow.
+2. **HPE GreenLake Personal API client**: A self-service `client_id` and `client_secret` pair (generated at `common.cloud.hpe.com/manage-account/api`). No access/refresh token pair is needed upfront; the producer mints tokens automatically against the GreenLake SSO endpoint.
+
+<Aside type="caution">There are deliberately no CLI flags like `--client-id` or `--client-secret` to prevent secrets from leaking into shell history. Always supply credentials via a token file or the interactive prompts.</Aside>
+
+
+## Getting started with Aruba Networking Central
+
+### Single mode
+
+By default, the producer runs interactively. It will auto-detect your cluster and list the sites available in your account, prompting you to select one or more. Each selected site generates its own separate OSIRIS JSON document.
+
+```bash
+# Default mode
+osirisjson-producer arubacentral
+
+# Audit mode
+osirisjson-producer arubacentral --purpose audit
+```
+
+### Run without login interaction
+
+The producer is designed to run without interactive login if needed.
+
+```bash
+# This writes a `arubacentral-token.json` skeleton. Populate it with your credentials.
+osirisjson-producer arubacentral template --Generate
+
+# Default mode
+osirisjson-producer arubacentral --token-file ./arubacentral-token.json
+
+# Audit mode
+osirisjson-producer arubacentral --purpose audit --token-file ./arubacentral-token.json
+```
+
+### CI/CD Automated Mode (Multi-Site Batch)
+
+This examples works as a perfect use-case for unattended execution (e.g., in a cron job or pipeline), you can specify one or multiple site or use the `--all` flag, this discovers and exports every accessible site non-interactively. Each site's resources is written to a dedicated OSIRIS JSON document in the output directory.
+
+```bash
+# You can bypass the site picker by specifying sites explicitly (comma-separated):
+osirisjson-producer arubacentral --token-file ./arubacentral-token.json --site "MXP,BRANCH-01"
+
+# Batch mode: export all sites silently in a specific output directory of choice named output
+osirisjson-producer arubacentral --all --token-file ./arubacentral-token.json -o ./output
+```
+
+## Flags reference
+
+### General flags
+
+| Flag                  | Short | Description                                                                           |
+| --------------------- | ----- | ------------------------------------------------------------------------------------- |
+| `--token-file`        |       | JSON file with `{client_id, client_secret}`. Mandatory for non-interactive auth.      |
+| `--cluster`           |       | Cluster short code (e.g. `eucentral3`). Auto-detects if omitted.                   |
+| `--base-url`          |       | Override the API Gateway base URL (takes precedence over `--cluster`).                |
+| `--site`              |       | Comma-separated site name(s) to collect (bypasses interactive site picker).           |
+| `--all`               |       | Auto-discover and export every accessible site, skipping prompts.                     |
+| `--output`            | `-o`  | Output directory for files. Default is `osirisjson-hpe-arubacentral` in current dir.  |
+| `--purpose`           |       | `documentation` (default) or `audit` (adds client fingerprints/health deep-dives).    |
+| `--include-raw-body`  |       | Attaches full API responses to resources. Requires `--purpose audit`.                 |
+| `--safe-failure-mode` |       | Secret handling: `fail-closed` (default), `log-and-redact`, `off`.                    |
+
+## What the producer collects
+
+The OSIRIS JSON producer for Aruba Networking Central extracts the following inventory and topology:
+
+**Run in documentation mode (Default)**
+
+| Resource / Element    | Description                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| `network.switch`      | Switches (includes stacking logic, hardware sensors, and VSX peerings)                        |
+| `network.gateway`     | Gateways (includes uplinks, ports, and VLANs)                                                 |
+| `network.interface`   | Interfaces and ports for the devices                                                          |
+| `network.vlan`        | VLANs spanning devices                                                                        |
+| APs & Radios          | `osiris.hpe.arubacentral.accesspoint`, `.radio`, `.wlan`, `.bssid` and `.swarm` (mesh swarms) |
+| Clients               | `osiris.hpe.arubacentral.client` (unified wired/wireless clients)                             |
+| Neighbors (Topology)  | LLDP/CDP adjacencies mapping device-to-device connections (`network` connections)             |
+| Unmanaged devices     | `osiris.hpe.arubacentral.device` (Stubs out 3rd-party edge devices found via CDP/LLDP)        |
+| Config Health & Sites | Maps Aruba's config-health compliance and site-health to OSIRIS `status` fields               |
+
+**Run in audit mode adds**
+
+| Element               | Description                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| Client Fingerprints   | Exact device host name, user name, OS, manufacturer, and authentication/security type         |
+| Deep Health telemetry | Breakdowns of AP/switch/gateway health and unmanaged-device MAC lookup resolution             |
+| Raw Payloads          | (With `--include-raw-body`) the true, unmodified API response under `extensions`              |
+
+## The resulting output directory
+
+By default, documents are saved in an `osirisjson-hpe-arubacentral` folder, structured by site. Each additional snapshot will be saved into the same site folder.
+
+```text
+osirisjson-hpe-arubacentral/
+  MXP/
+    hpe-arubacentral-2026-07-27T20-11-11Z-mxp.json
+  BRANCH-01/
+    hpe-arubacentral-2026-07-27T20:12:05Z-branch-01.json
+```
+
+Re-running the command adds new timestamped files alongside prior ones, creating a clean historical record for drift detection.
+
+## OSIRIS JSON output structure
+
+The Aruba Central producer emits the standard OSIRIS JSON envelope:
+
+```json
+{
+  "$schema": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+  "version": "1.0.0",
+  "metadata": {
+    "timestamp": "",
+    "generator": {
+      "name": "osirisjson-producer-hpe-arubacentral",
+      "version": "0.1.0",
+      "url": "https://docs.osirisjson.org/osiris-producers/network/hpe-aruba-networking-central/"
+    },
+    "scope": {
+      "purpose": "",
+      "providers": ["hpe.arubacentral"],
+      "sites": [""],
+      "clusters": [""]
+    }
+  },
+  "topology": {
+    "resources": [ ... ],
+    "connections": [ ... ],
+    "groups": [ ... ]
+  }
+}
+```
+
+## Examples
+
+### Single HPE Aruba Networking Central site collection
+
+In this example we run a single site collection.
+```bash
+osirisjson-producer arubacentral --purpose audit --token-file ./aruba.json --site "BRANCH-01"
+```
+
+### Output for hpe-arubacentral-2026-07-27T20:12:05Z-branch-01.json
+
+The following example have been intentionally trimmed replacing real values with documentation examples reserved by established IETF standards:
+
+- IPv4 addresses: [RFC 5737](https://www.rfc-editor.org/rfc/rfc5737.html)
+- Documentation MAC addresses: [RFC 7042](https://www.rfc-editor.org/rfc/rfc7042.html)
+
+```json
+{
+  "$schema": "https://osirisjson.org/schema/v1.0/osiris.schema.json",
+  "version": "1.0.0",
+  "metadata": {
+    "timestamp": "2026-07-27T20:12:05Z",
+    "generator": {
+      "name": "osirisjson-producer-hpe-arubacentral",
+      "version": "0.1.0",
+      "url": "https://docs.osirisjson.org/osiris-producers/network/hpe-aruba-networking-central/"
+    },
+    "scope": {
+      "purpose": "audit",
+      "providers": [
+        "hpe.arubacentral"
+      ],
+      "sites": [
+        "BRANCH-01"
+      ],
+      "clusters": [
+        "eucentral3 (https://de3.api.central.arubanetworks.com)"
+      ]
+    }
+  },
+  "topology": {
+    "resources": [
+      {
+        "id": "hpe.arubacentral::SN00000001",
+        "type": "osiris.hpe.arubacentral.accesspoint",
+        "name": "BRNCHTT001",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000001",
+          "type": "AP-515",
+          "site": "BRANCH-01",
+          "source": "aruba-new-central-api",
+          "version": "10.8.1.0_95966"
+        },
+        "status": "active",
+        "state": "ONLINE",
+        "properties": {
+          "cpu_utilization_pct": 2,
+          "deployment": "Standalone",
+          "ipv4": "10.55.0.1",
+          "mac_address": "00:00:5e:00:53:01",
+          "memory_utilization_pct": 58,
+          "part_number": "PT0001",
+          "power_consumption_watts": 12.468,
+          "public_ipv4": "198.51.100.1",
+          "site_id": "123456789101",
+          "uptime_seconds": 24308
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000001/port/eth0",
+        "type": "network.interface",
+        "name": "eth0",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000001",
+          "source": "aruba-new-central-api"
+        },
+        "status": "active",
+        "properties": {
+          "access_vlan": "-",
+          "allowed_vlan": "all",
+          "connector": "RJ45",
+          "duplex": "Full",
+          "mac_address": "00:00:5e:00:53:01",
+          "native_vlan": "1",
+          "speed": "2500",
+          "vlan_mode": "Trunk"
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000001/port/eth1",
+        "type": "network.interface",
+        "name": "eth1",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000001",
+          "source": "aruba-new-central-api"
+        },
+        "status": "inactive",
+        "properties": {
+          "access_vlan": "-",
+          "allowed_vlan": "all",
+          "connector": "RJ45",
+          "duplex": "-",
+          "mac_address": "00:00:5e:00:53:02",
+          "native_vlan": "1",
+          "speed": "-",
+          "vlan_mode": "Trunk"
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000001/radio/0",
+        "type": "osiris.hpe.arubacentral.radio",
+        "name": "BRNCHTT001 radio 0",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000001",
+          "source": "aruba-new-central-api"
+        },
+        "status": "unknown",
+        "properties": {
+          "antenna": "Internal",
+          "band": "5 GHz",
+          "mac_address": "00:00:5e:00:53:03",
+          "radio_type": "802.11ax",
+          "spatial_stream": "4x4:4"
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000001/radio/1",
+        "type": "osiris.hpe.arubacentral.radio",
+        "name": "BRNCHTT001 radio 1",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000001",
+          "source": "aruba-new-central-api"
+        },
+        "status": "unknown",
+        "properties": {
+          "antenna": "Internal",
+          "band": "2.4 GHz",
+          "mac_address": "00:00:5e:00:53:04",
+          "radio_type": "802.11ax",
+          "spatial_stream": "2x2:2"
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000002",
+        "type": "network.gateway",
+        "name": "BRNCHGW002",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000002",
+          "type": "A9240",
+          "site": "BRANCH-01",
+          "source": "aruba-new-central-api",
+          "version": "10.8.1.0_95966"
+        },
+        "status": "active",
+        "state": "Online",
+        "properties": {
+          "cluster_name": "gpr_22",
+          "cpu_utilization_pct": 5,
+          "device_function": "Unspecified",
+          "ip_address": "10.50.0.210",
+          "mac_address": "00:00:5e:00:53:05",
+          "mac_range": "00:00:5e:00:53:05-00:00:5e:00:53:06",
+          "memory_utilization_pct": 19,
+          "reboot_reason": "Reboot by Aruba Central (Intent:cause: 86:64)",
+          "role": "Member",
+          "site_id": "123456789101",
+          "uptime_seconds": 1223058
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000002/port/GE 0/0/0",
+        "type": "network.interface",
+        "name": "GE 0/0/0",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000002",
+          "source": "aruba-new-central-api"
+        },
+        "status": "unknown",
+        "properties": {
+          "admin_state": "Enabled",
+          "duplex": "Auto",
+          "mac_address": "00:00:5e:00:53:07",
+          "oper_state": "Down",
+          "port_type": "Access",
+          "speed": "Auto",
+          "vlan": "1"
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000002/port/GE 0/0/1",
+        "type": "network.interface",
+        "name": "GE 0/0/1",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000002",
+          "source": "aruba-new-central-api"
+        },
+        "status": "unknown",
+        "properties": {
+          "admin_state": "Enabled",
+          "duplex": "Auto",
+          "mac_address": "00:00:5e:00:53:08",
+          "oper_state": "Down",
+          "port_type": "Access",
+          "speed": "Auto",
+          "vlan": "1"
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000002/port/GE 0/0/2",
+        "type": "network.interface",
+        "name": "GE 0/0/2",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000002",
+          "source": "aruba-new-central-api"
+        },
+        "status": "active",
+        "properties": {
+          "admin_state": "Enabled",
+          "duplex": "Full",
+          "mac_address": "00:00:5e:00:53:09",
+          "oper_state": "Up",
+          "port_type": "Access",
+          "speed": "25000",
+          "vlan": "1,15,22,31-39"
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000005",
+        "type": "network.switch",
+        "name": "BRNCH001-OFFICE02",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000005",
+          "type": "CX-8360-32Y4C",
+          "site": "BRANCH-01",
+          "source": "aruba-new-central-api",
+          "version": "LL.10.16.1051"
+        },
+        "status": "active",
+        "state": "Online",
+        "properties": {
+          "cpu_utilization_pct": 9,
+          "deployment": "VSX",
+          "hardware": {
+            "cpu_health": "Good",
+            "fans_health": "Good",
+            "fans_total_count": 8,
+            "fans_up_count": 8,
+            "memory_health": "Good",
+            "power_supplies_health": "Good",
+            "power_supplies_total_count": 2,
+            "power_supplies_up_count": 2,
+            "temperature_health": "Good"
+          },
+          "ipv4": "10.0.50.2",
+          "mac_address": "00:00:5e:00:53:16",
+          "memory_utilization_pct": 18,
+          "power_consumption_watts": 124.37000274658,
+          "public_ip": "198.51.100.1",
+          "site_id": "123456789101",
+          "switch_role": "Standalone",
+          "switch_type": "cx",
+          "uptime_seconds": 1213235
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000005/interface/1/1/1",
+        "type": "network.interface",
+        "name": "1/1/1",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000005",
+          "source": "aruba-new-central-api"
+        },
+        "status": "unknown",
+        "properties": {
+          "admin_status": "Down",
+          "allowed_vlans": [
+            ""
+          ],
+          "connector": "SFP",
+          "duplex": "-",
+          "module": "1",
+          "mtu": 1500,
+          "oper_status": "Down"
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000005/interface/1/1/10",
+        "type": "network.interface",
+        "name": "1/1/10",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000005",
+          "source": "aruba-new-central-api"
+        },
+        "status": "unknown",
+        "properties": {
+          "admin_status": "Down",
+          "allowed_vlans": [
+            ""
+          ],
+          "connector": "SFP",
+          "duplex": "-",
+          "module": "1",
+          "mtu": 1500,
+          "oper_status": "Down"
+        }
+      },
+      {
+        "id": "hpe.arubacentral::SN00000005/interface/1/1/11",
+        "type": "network.interface",
+        "name": "1/1/11",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "SN00000005",
+          "source": "aruba-new-central-api"
+        },
+        "status": "unknown",
+        "properties": {
+          "admin_status": "Down",
+          "allowed_vlans": [
+            ""
+          ],
+          "connector": "SFP",
+          "duplex": "-",
+          "module": "1",
+          "mtu": 1500,
+          "oper_status": "Down"
+        }
+      },
+      {
+        "id": "hpe.arubacentral::site/123456789012",
+        "type": "osiris.hpe.arubacentral.site",
+        "name": "BRANCH-01",
+        "provider": {
+          "name": "hpe.arubacentral",
+          "native_id": "123456789012",
+          "site": "BRANCH-01",
+          "source": "aruba-new-central-api"
+        },
+        "status": "active",
+        "properties": {
+          "address": "Via del Castello 9",
+          "city": "Brescia",
+          "country": "Italy",
+          "device_count": 2,
+          "latitude": 45.5428981,
+          "longitude": 10.2250778,
+          "state": "Brescia",
+          "timezone_id": "Europe/Rome",
+          "timezone_name": "Central European Standard Time"
+        }
+      }
+    ],
+    "connections": [
+      {
+        "id": "conn-contains-SN00000001-to-0-abcd000204900002",
+        "type": "contains",
+        "source": "hpe.arubacentral::SN00000001",
+        "target": "hpe.arubacentral::SN00000001/radio/0",
+        "direction": "forward",
+        "name": "BRNCHTT001 radio 0"
+      },
+      {
+        "id": "conn-contains-SN00000001-to-1-abcd000204900003",
+        "type": "contains",
+        "source": "hpe.arubacentral::SN00000001",
+        "target": "hpe.arubacentral::SN00000001/radio/1",
+        "direction": "forward",
+        "name": "BRNCHTT001 radio 1"
+      },
+      {
+        "id": "conn-contains-SN00000001-to-eth0-abcd000204900004",
+        "type": "contains",
+        "source": "hpe.arubacentral::SN00000001",
+        "target": "hpe.arubacentral::SN00000001/port/eth0",
+        "direction": "forward",
+        "name": "SN00000001 -> eth0"
+      },
+      {
+        "id": "conn-contains-SN00000001-to-eth1-abcd000204900005",
+        "type": "contains",
+        "source": "hpe.arubacentral::SN00000001",
+        "target": "hpe.arubacentral::SN00000001/port/eth1",
+        "direction": "forward",
+        "name": "SN00000001 -> eth1"
+      },
+      {
+        "id": "conn-contains-SN00000002-to-0-abcd000204900006",
+        "type": "contains",
+        "source": "hpe.arubacentral::SN00000002",
+        "target": "hpe.arubacentral::SN00000002/port/GE 0/0/0",
+        "direction": "forward",
+        "name": "SN00000002 -> GE 0/0/0"
+      },
+      {
+        "id": "conn-contains-SN00000002-to-1-abcd000204900007",
+        "type": "contains",
+        "source": "hpe.arubacentral::SN00000002",
+        "target": "hpe.arubacentral::SN00000002/port/GE 0/0/1",
+        "direction": "forward",
+        "name": "SN00000002 -> GE 0/0/1"
+      },
+      {
+        "id": "conn-contains-SN00000002-to-2-abcd000204900008",
+        "type": "contains",
+        "source": "hpe.arubacentral::SN00000002",
+        "target": "hpe.arubacentral::SN00000002/port/GE 0/0/2",
+        "direction": "forward",
+        "name": "SN00000002 -> GE 0/0/2"
+      },
+      {
+        "id": "conn-contains-SN00000005-to-1-abcd000204900009",
+        "type": "contains",
+        "source": "hpe.arubacentral::SN00000005",
+        "target": "hpe.arubacentral::SN00000005/interface/1/1/1",
+        "direction": "forward",
+        "name": "SN00000005 -> 1/1/1"
+      },
+      {
+        "id": "conn-contains-SN00000005-to-10-abcd000204900010",
+        "type": "contains",
+        "source": "hpe.arubacentral::SN00000005",
+        "target": "hpe.arubacentral::SN00000005/interface/1/1/10",
+        "direction": "forward",
+        "name": "SN00000005 -> 1/1/10"
+      },
+      {
+        "id": "conn-contains-SN00000005-to-11-abcd000204900011",
+        "type": "contains",
+        "source": "hpe.arubacentral::SN00000005",
+        "target": "hpe.arubacentral::SN00000005/interface/1/1/11",
+        "direction": "forward",
+        "name": "SN00000005 -> 1/1/11"
+      }
+    ],
+    "groups": [
+      {
+        "id": "group-logical.site-123456789101-abcd000204900012",
+        "type": "logical.site",
+        "name": "BRANCH-01",
+        "members": [
+          "hpe.arubacentral::SN00000001",
+          "hpe.arubacentral::SN00000002",
+          "hpe.arubacentral::SN00000005"
+        ]
+      }
+    ]
+  }
+}
+```

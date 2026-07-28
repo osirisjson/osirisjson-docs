@@ -1,7 +1,7 @@
 ---
 title: 'Install OSIRIS JSON Producers'
 description: 'OSIRIS JSON Producers are available for MacOS, Windows, Linux. If you have Go installed your can run directly in OSIRIS JSON producer in your environment.'
-lastUpdated: 2026-06-21T00:00:00Z
+lastUpdated: 2026-07-28T00:00:00Z
 sidebar:
   label: 'How to install'
   order: 1
@@ -90,6 +90,21 @@ macOS remembers the exception after the first run.
 After applying either fix, the binary runs normally with no further prompts.
 
 ## Windows
+
+**Windows** (winget)
+
+```powershell
+winget install osirisjson.osirisjson-producer
+```
+
+**Windows** (Scoop)
+
+```powershell
+scoop bucket add osiris-producers https://github.com/osirisjson/scoop-osiris-producers
+scoop install osirisjson-producer
+```
+
+**Windows** (manual)
 
 Extract the `.zip` archive and move `osirisjson-producer.exe` to a directory
 on your `%PATH%`. A user-writable location that works without admin rights:

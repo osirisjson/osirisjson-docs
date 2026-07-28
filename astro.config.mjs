@@ -62,7 +62,10 @@ export default defineConfig({
 						{ label: 'Security', slug: 'osiris-producers/security' },
 						{
 							label: 'Network',
-							items: [{ label: 'Cisco', slug: 'osiris-producers/network/cisco' }],
+							items: [
+								{ label: 'Cisco', slug: 'osiris-producers/network/cisco' },
+								{ label: 'HPE', slug: 'osiris-producers/network/hpe-aruba-networking-central' },
+							],
 						},
 						{
 							label: 'Hyperscalers',
