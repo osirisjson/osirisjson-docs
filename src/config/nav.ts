@@ -79,7 +79,7 @@ export const navEntries: NavEntry[] = [
 					},
 					{
 						label: 'Presentation slide deck',
-						href: `${ORG_SITE}/assets/media-kit/osiris-json-value-deck.pptx`,
+						href: `${ORG_SITE}/assets/media-kit/osiris-json-value-deck.pdf`,
 						target: '_blank',
 					},
 				],
