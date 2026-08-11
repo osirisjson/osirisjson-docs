@@ -1,0 +1,17 @@
+---
+import { Badge } from '@astrojs/starlight/components';
+import type { SidebarLink as SidebarLinkNode } from './sidebar-data';
+
+interface Props {
+	link: SidebarLinkNode;
+	isCurrent: boolean;
+	large?: boolean;
+}
+
+const { link, isCurrent, large = false } = Astro.props;
+---
+
+<a href={link.href} aria-current={isCurrent ? 'page' : undefined} class:list={{ large }}>
+	<span>{link.label}</span>
+	{link.badge && <Badge variant={link.badge.variant} text={link.badge.text} />}
+</a>

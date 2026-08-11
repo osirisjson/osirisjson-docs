@@ -1,0 +1,52 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+import SidebarLink from './SidebarLink.astro';
+import type { SidebarGroup as SidebarGroupNode } from './sidebar-data';
+
+interface Props {
+	group: SidebarGroupNode;
+	currentPath: string;
+}
+
+const { group, currentPath } = Astro.props;
+
+function normalize(path: string): string {
+	return path.replace(/\/+$/, '') || '/';
+}
+
+function isCurrentLink(href: string): boolean {
+	return normalize(href) === normalize(currentPath);
+}
+
+function hasActiveDescendant(nodes: SidebarGroupNode['nodes']): boolean {
+	return nodes.some((node) =>
+		node.type === 'link' ? isCurrentLink(node.href) : hasActiveDescendant(node.nodes),
+	);
+}
+
+const isOpen = hasActiveDescendant(group.nodes) || group.collapsed !== true;
+---
+
+<li>
+	<details open={isOpen}>
+		<summary>
+			<span class="group-label">
+				<span class="large">{group.label}</span>
+			</span>
+			<Icon name="right-caret" class="caret" size="1.25rem" />
+		</summary>
+		<ul>
+			{
+				group.nodes.map((node) =>
+					node.type === 'link' ? (
+						<li>
+							<SidebarLink link={node} isCurrent={isCurrentLink(node.href)} />
+						</li>
+					) : (
+						<Astro.self group={node} currentPath={currentPath} />
+					),
+				)
+			}
+		</ul>
+	</details>
+</li>

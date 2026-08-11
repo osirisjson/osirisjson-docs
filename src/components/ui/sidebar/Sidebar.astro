@@ -1,0 +1,147 @@
+---
+import MobileMenuFooter from 'virtual:starlight/components/MobileMenuFooter';
+import SidebarGroup from './SidebarGroup.astro';
+import SidebarLink from './SidebarLink.astro';
+import { osirisSidebarSections } from './sidebar-data';
+
+const currentPath = Astro.url.pathname;
+---
+
+{
+	osirisSidebarSections.map((section) => (
+		<div class="sidebar-section">
+			<p class="sidebar-section-heading">{section.heading}</p>
+			<ul class="top-level">
+				{section.nodes.map((node) =>
+					node.type === 'link' ? (
+						<li>
+							<SidebarLink
+								link={node}
+								isCurrent={
+									(node.href.replace(/\/+$/, '') || '/') ===
+									(currentPath.replace(/\/+$/, '') || '/')
+								}
+								large
+							/>
+						</li>
+					) : (
+						<SidebarGroup group={node} currentPath={currentPath} />
+					),
+				)}
+			</ul>
+		</div>
+	))
+}
+
+<div class="md:sl-hidden">
+	<MobileMenuFooter />
+</div>
+
+<style>
+	@layer starlight.core {
+		.sidebar-section-heading {
+			margin: 0 0 0.5rem;
+			padding-inline: var(--sl-sidebar-item-padding-inline, 0.5rem);
+			font-family: var(--sl-font);
+			font-style: normal;
+			font-size: var(--sl-text-2xs);
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: var(--sl-color-gray-3);
+		}
+
+		.sidebar-section + .sidebar-section {
+			margin-top: 1.5rem;
+		}
+
+		:global(.sidebar-content ul) {
+			--sl-sidebar-item-padding-inline: 0.5rem;
+			list-style: none;
+			padding: 0;
+			margin: 0;
+		}
+
+		:global(.sidebar-content li) {
+			overflow-wrap: anywhere;
+		}
+
+		:global(.sidebar-content ul ul li) {
+			margin-inline-start: var(--sl-sidebar-item-padding-inline);
+			border-inline-start: 1px solid var(--sl-color-hairline-light);
+			padding-inline-start: var(--sl-sidebar-item-padding-inline);
+		}
+
+		:global(.sidebar-content .large) {
+			font-size: var(--sl-text-lg);
+			font-weight: 600;
+			color: var(--sl-color-white);
+		}
+
+		:global(.sidebar-content .top-level > li + li) {
+			margin-top: 0.75rem;
+		}
+
+		:global(.sidebar-content summary) {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0.2em var(--sl-sidebar-item-padding-inline);
+			line-height: 1.4;
+			cursor: pointer;
+			user-select: none;
+		}
+		:global(.sidebar-content summary::marker),
+		:global(.sidebar-content summary::-webkit-details-marker) {
+			display: none;
+		}
+
+		:global(.sidebar-content .caret) {
+			transition: transform 0.2s ease-in-out;
+			flex-shrink: 0;
+		}
+		:global([dir='rtl'] .sidebar-content .caret) {
+			transform: rotateZ(180deg);
+		}
+		:global(.sidebar-content [open] > summary .caret) {
+			transform: rotateZ(90deg);
+		}
+
+		:global(.sidebar-content a) {
+			display: block;
+			border-radius: 0.25rem;
+			text-decoration: none;
+			color: var(--sl-color-gray-2);
+			padding: 0.3em var(--sl-sidebar-item-padding-inline);
+			line-height: 1.4;
+		}
+
+		:global(.sidebar-content a:is(:hover, :focus)) {
+			color: var(--sl-color-white);
+		}
+
+		:global(.sidebar-content a[aria-current='page']),
+		:global(.sidebar-content a[aria-current='page']:is(:hover, :focus)) {
+			font-weight: 600;
+			color: var(--sl-color-text-invert);
+			background-color: var(--sl-color-text-accent);
+		}
+
+		:global(.sidebar-content a > *:not(:last-child)),
+		:global(.sidebar-content .group-label > *:not(:last-child)) {
+			margin-inline-end: 0.25em;
+		}
+
+		@media (min-width: 50rem) {
+			:global(.sidebar-content .top-level > li + li) {
+				margin-top: 0.5rem;
+			}
+			:global(.sidebar-content .large) {
+				font-size: var(--sl-text-base);
+			}
+			:global(.sidebar-content a) {
+				font-size: var(--sl-text-sm);
+			}
+		}
+	}
+</style>
