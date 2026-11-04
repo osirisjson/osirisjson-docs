@@ -6,7 +6,7 @@ const { editUrl } = Astro.locals.starlightRoute;
 
 {
 	editUrl && (
-		<a href={editUrl} class="sl-flex print:hidden">
+		<a href={editUrl} class="osiris-edit-link sl-flex print:hidden">
 			<span class="material-symbols-outlined" aria-hidden="true">
 				edit
 			</span>
@@ -14,20 +14,3 @@ const { editUrl } = Astro.locals.starlightRoute;
 		</a>
 	)
 }
-
-<style>
-	@layer starlight.core {
-		a {
-			gap: 0.5rem;
-			align-items: center;
-			text-decoration: none;
-			color: var(--sl-color-gray-3);
-		}
-		a:hover {
-			color: var(--sl-color-text-accent);
-		}
-		a :global(.material-symbols-outlined) {
-			font-size: 1.2em;
-		}
-	}
-</style>
